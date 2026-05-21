@@ -832,9 +832,13 @@ function handlePhoto(input){
 // GEMINI API CALL — tries models in order until one works
 async function geminiCall(prompt, imageData=null){
   const apiKey=getS().apiKey||'';
-  const models=['gemini-1.5-flash-8b','gemini-1.5-flash','gemini-2.0-flash-lite','gemini-pro'];
-  let lastErr='';
-  for(const model of models){
+  if(!apiKey) throw new Error('no_key');
+
+  // Confirmed working models from your API key (v1beta)
+  const models=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-2.5-flash'];
+  let lastErr='Unknown error';
+
+  for(const m of models){
     try{
       let parts=[];
       if(imageData){
@@ -844,26 +848,28 @@ async function geminiCall(prompt, imageData=null){
       } else {
         parts=[{text:prompt}];
       }
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,{
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+      const res=await fetch(url,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.3,maxOutputTokens:1000}})
+        body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.4,maxOutputTokens:1000}})
       });
       const data=await res.json();
       if(!res.ok){
-        lastErr=data.error?.message||'Error '+res.status;
-        // If model not found, try next
-        if(lastErr.includes('not found')||lastErr.includes('not supported')||res.status===404){continue;}
-        throw new Error(lastErr);
+        lastErr=data.error?.message||'HTTP '+res.status;
+        if(res.status===429||res.status===401||res.status===403) throw new Error(lastErr);
+        continue;
       }
       const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      if(!text){lastErr='Empty response';continue;}
       return text;
     }catch(e){
-      if(e.message?.includes('not found')||e.message?.includes('not supported')){lastErr=e.message;continue;}
-      throw e;
+      if(e.message==='no_key') throw e;
+      if(e.message?.includes('quota')||e.message?.includes('PERMISSION')||e.message?.includes('API key')) throw e;
+      lastErr=e.message||lastErr;
     }
   }
-  throw new Error('No working Gemini model found. Check your API key. Last error: '+lastErr);
+  throw new Error(lastErr);
 }
 
 // AUTO-CALCULATE nutrition from food name + optional photo
