@@ -681,7 +681,26 @@ select.fi option{background:var(--bg2)}
       <div class="fg"><label class="fl">Meal</label>
         <select class="fi" id="meal-type"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
       </div>
-      <div class="fg"><label class="fl">Food Name</label><input class="fi" type="text" id="food-name" placeholder="e.g. Grilled chicken, Rice..."/></div>
+
+      <!-- Photo first — AI reads it -->
+      <div class="fg"><label class="fl">Photo (optional — AI will read it)</label>
+        <label class="photo-area" id="photo-area-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take or Choose Photo
+          <input type="file" accept="image/*" capture="environment" style="display:none" id="photo-input" onchange="handlePhoto(this)"/>
+        </label>
+        <img id="photo-prev" class="photo-prev"/>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Food Name</label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" type="text" id="food-name" placeholder="e.g. Grilled chicken, Rice..." style="flex:1"/>
+          <button onclick="autoCalc()" id="ai-calc-btn" style="flex-shrink:0;padding:0 14px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:var(--r-sm);color:var(--accent);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">✦ AI Fill</button>
+        </div>
+        <div id="ai-calc-status" style="font-size:11px;color:var(--text2);margin-top:5px;min-height:14px"></div>
+      </div>
+
       <div class="fr">
         <div class="fg"><label class="fl">Calories (kcal)</label><input class="fi" type="number" id="food-cal" placeholder="350"/></div>
         <div class="fg"><label class="fl">Serving</label><input class="fi" type="text" id="food-serving" placeholder="200g"/></div>
@@ -691,14 +710,6 @@ select.fi option{background:var(--bg2)}
         <div class="fg"><label class="fl">Carbs (g)</label><input class="fi" type="number" id="food-carb" placeholder="45"/></div>
       </div>
       <div class="fg"><label class="fl">Fat (g)</label><input class="fi" type="number" id="food-fat" placeholder="12"/></div>
-      <div class="fg"><label class="fl">Photo (optional)</label>
-        <label class="photo-area">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Take or Choose Photo
-          <input type="file" accept="image/*" capture="environment" style="display:none" id="photo-input" onchange="handlePhoto(this)"/>
-        </label>
-        <img id="photo-prev" class="photo-prev"/>
-      </div>
       <button class="btn-p" onclick="logFood()">Log Food</button>
     </div>
     <div id="drink-form" style="display:none">
@@ -810,8 +821,86 @@ let photoData=null;
 function handlePhoto(input){
   if(!input.files[0])return;
   const r=new FileReader();
-  r.onload=e=>{photoData=e.target.result;const p=document.getElementById('photo-prev');p.src=photoData;p.style.display='block';};
+  r.onload=e=>{
+    photoData=e.target.result;
+    const p=document.getElementById('photo-prev');p.src=photoData;p.style.display='block';
+    // Auto-trigger AI calc when photo added
+    autoCalc();
+  };
   r.readAsDataURL(input.files[0]);
+}
+
+// AUTO-CALCULATE nutrition from food name + optional photo
+async function autoCalc(){
+  const name=document.getElementById('food-name').value.trim();
+  const apiKey=getS().apiKey||'';
+  if(!apiKey){
+    document.getElementById('ai-calc-status').textContent='⚠️ Add Gemini API key in Settings to use AI fill.';
+    document.getElementById('ai-calc-status').style.color='var(--amber)';
+    return;
+  }
+  if(!name && !photoData){
+    document.getElementById('ai-calc-status').textContent='Enter a food name or add a photo first.';
+    return;
+  }
+  const btn=document.getElementById('ai-calc-btn');
+  const status=document.getElementById('ai-calc-status');
+  btn.textContent='...';btn.disabled=true;
+  status.textContent='Calculating nutrition…';status.style.color='var(--text2)';
+
+  const textPrompt=`You are a nutrition database. Given the food${name?' "'+name+'"':''}, estimate the nutritional values for a typical single serving.
+Respond ONLY with a JSON object (no markdown, no backticks, no explanation):
+{"name":"full food name","serving":"serving size e.g. 200g or 1 cup","calories":number,"protein":number,"carbs":number,"fat":number}
+All numbers must be integers. Be accurate based on standard nutritional data.`;
+
+  try{
+    let body;
+    if(photoData){
+      // Send image + text to Gemini Vision
+      const base64=photoData.split(',')[1];
+      const mime=photoData.split(';')[0].split(':')[1];
+      body=JSON.stringify({
+        contents:[{parts:[
+          {inline_data:{mime_type:mime,data:base64}},
+          {text: name
+            ? `This is a photo of food. The user says it is "${name}". Identify exactly what is shown and estimate nutrition for the visible portion.\n${textPrompt}`
+            : `Identify the food in this photo and estimate its nutrition for the visible portion.\n${textPrompt}`
+          }
+        ]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:300}
+      });
+    } else {
+      body=JSON.stringify({
+        contents:[{parts:[{text:textPrompt}]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:300}
+      });
+    }
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+res.status);}
+    const data=await res.json();
+    const raw=(data.candidates?.[0]?.content?.parts?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
+    const r=JSON.parse(raw);
+
+    // Fill in the form fields
+    if(r.name && !name) document.getElementById('food-name').value=r.name;
+    else if(r.name && name) document.getElementById('food-name').value=r.name;
+    if(r.serving) document.getElementById('food-serving').value=r.serving;
+    if(r.calories) document.getElementById('food-cal').value=r.calories;
+    if(r.protein)  document.getElementById('food-prot').value=r.protein;
+    if(r.carbs)    document.getElementById('food-carb').value=r.carbs;
+    if(r.fat)      document.getElementById('food-fat').value=r.fat;
+
+    status.textContent='✓ Nutrition filled by AI — review and adjust if needed.';
+    status.style.color='var(--accent)';
+  }catch(e){
+    status.textContent='❌ '+( e.message||'Could not calculate. Fill manually.');
+    status.style.color='var(--red)';
+  }finally{
+    btn.textContent='✦ AI Fill';btn.disabled=false;
+  }
 }
 
 // LOG FOOD
@@ -833,7 +922,10 @@ function logFood(){
 }
 function clearFoodForm(){
   ['food-name','food-cal','food-serving','food-prot','food-carb','food-fat'].forEach(id=>{document.getElementById(id).value='';});
-  photoData=null;document.getElementById('photo-prev').style.display='none';document.getElementById('photo-input').value='';
+  photoData=null;
+  document.getElementById('photo-prev').style.display='none';
+  document.getElementById('photo-input').value='';
+  const st=document.getElementById('ai-calc-status');if(st){st.textContent='';}
 }
 function logDrink(){
   const amount=+document.getElementById('drink-amount').value||0;
@@ -985,7 +1077,7 @@ Respond ONLY with a JSON object (no markdown, no backticks):
     return;
   }
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -1142,7 +1234,7 @@ async function generateAIReport(){
   const apiKey=getS().apiKey||'';
   if(!apiKey){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--amber);font-size:13px;font-weight:600">⚠️ Add your free Gemini API key in Settings → AI Features.</div>`;return;}
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
