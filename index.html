@@ -619,12 +619,12 @@ select.fi option{background:var(--bg2)}
   <div class="settings-section-title">AI Features</div>
   <div class="card">
     <div class="fg">
-      <label class="fl">Gemini API Key</label>
-      <input class="fi" type="password" id="api-key" placeholder="AIza..." onchange="saveSettings()"/>
+      <label class="fl">Groq API Key</label>
+      <input class="fi" type="password" id="api-key" placeholder="gsk_..." onchange="saveSettings()"/>
     </div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:4px">
-      Free — no credit card needed. Get your key at
-      <a href="https://aistudio.google.com" style="color:var(--blue);text-decoration:none">aistudio.google.com</a> → Get API Key
+      Free — 14,400 requests/day, no card needed. Get your key at
+      <a href="https://console.groq.com" style="color:var(--blue);text-decoration:none">console.groq.com</a> → API Keys → Create
     </div>
   </div>
 
@@ -639,7 +639,7 @@ select.fi option{background:var(--bg2)}
   <div class="settings-section-title">App Info</div>
   <div class="card">
     <div style="color:var(--text2);font-size:13px;line-height:1.8">
-      <div style="color:var(--text);font-weight:700;margin-bottom:4px">NourishTrack v1.1</div>
+      <div style="color:var(--text);font-weight:700;margin-bottom:4px">NourishTrack v1.2</div>
       All data stored privately on your device.<br>
       <span style="color:var(--text3)">iPhone: Share → Add to Home Screen<br>Android: Menu → Install App</span>
     </div>
@@ -952,42 +952,45 @@ async function geminiCall(prompt, imageData=null){
   const apiKey=getS().apiKey||'';
   if(!apiKey) throw new Error('no_key');
 
-  // Confirmed working models from your API key (v1beta)
-  const models=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-2.5-flash'];
+  const callType=imageData?'AI Fill (photo)':prompt.includes('report')||prompt.includes('summary')?'AI Report':prompt.includes('nutritionist')||prompt.includes('Analyse')?'AI Analyse':'AI Fill';
+
+  // Groq models in order of preference
+  const models=['llama-3.3-70b-versatile','llama-3.1-8b-instant','llama3-70b-8192','llama3-8b-8192','mixtral-8x7b-32768'];
   let lastErr='Unknown error';
-  // Determine call type from prompt content
-  const callType=imageData?'AI Fill (photo)':prompt.includes('summary')||prompt.includes('report')?'AI Report':prompt.includes('nutritionist')||prompt.includes('Analyse')?'AI Analyse':'AI Fill';
 
   for(const m of models){
     try{
-      let parts=[];
-      if(imageData){
-        const base64=imageData.split(',')[1];
-        const mime=imageData.split(';')[0].split(':')[1];
-        parts=[{inline_data:{mime_type:mime,data:base64}},{text:prompt}];
-      } else {
-        parts=[{text:prompt}];
-      }
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
-      const res=await fetch(url,{
+      // Groq doesn't support images — strip image, keep text prompt only
+      const messages=[{role:'user',content:prompt}];
+
+      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0.4,maxOutputTokens:1000}})
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':`Bearer ${apiKey}`
+        },
+        body:JSON.stringify({
+          model:m,
+          messages,
+          temperature:0.4,
+          max_tokens:1000
+        })
       });
       const data=await res.json();
       if(!res.ok){
         lastErr=data.error?.message||'HTTP '+res.status;
-        logApiCall(callType, m, res.status===429?'rate_limit':'error', lastErr);
-        if(res.status===429||res.status===401||res.status===403) throw new Error(lastErr);
+        logApiCall(callType,m,res.status===429?'rate_limit':'error',lastErr);
+        if(res.status===401||res.status===403) throw new Error('Invalid API key. Check Settings → AI Features.');
+        if(res.status===429) throw new Error(lastErr);
         continue;
       }
-      const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+      const text=data.choices?.[0]?.message?.content||'';
       if(!text){lastErr='Empty response';continue;}
-      logApiCall(callType, m, 'ok');
+      logApiCall(callType,m,'ok');
       return text;
     }catch(e){
       if(e.message==='no_key') throw e;
-      if(e.message?.includes('quota')||e.message?.includes('PERMISSION')||e.message?.includes('API key')) throw e;
+      if(e.message?.includes('Invalid API')||e.message?.includes('401')||e.message?.includes('quota')) throw e;
       lastErr=e.message||lastErr;
     }
   }
@@ -1000,7 +1003,7 @@ async function autoCalc(){
   const name=document.getElementById('food-name').value.trim();
   const apiKey=getS().apiKey||'';
   if(!apiKey){
-    document.getElementById('ai-calc-status').textContent='⚠️ Add Gemini API key in Settings to use AI fill.';
+    document.getElementById('ai-calc-status').textContent='⚠️ Add Groq API key in Settings to use AI fill.';
     document.getElementById('ai-calc-status').style.color='var(--amber)';
     return;
   }
@@ -1019,10 +1022,11 @@ Respond ONLY with a JSON object (no markdown, no backticks, no explanation):
 All numbers must be integers. Be accurate based on standard nutritional data.`;
 
   try{
-    const fullPrompt=photoData
-      ? (name ? `This is a photo of food. The user says it is "${name}". Identify exactly what is shown and estimate nutrition for the visible portion.\n${textPrompt}` : `Identify the food in this photo and estimate its nutrition for the visible portion.\n${textPrompt}`)
+    // Groq is text-only — if photo provided, use name + generic prompt
+    const fullPrompt=name
+      ? `The food is: "${name}". ${textPrompt}`
       : textPrompt;
-    const raw=(await geminiCall(fullPrompt, photoData||null)).replace(/```json|```/g,'').trim();
+    const raw=(await geminiCall(fullPrompt, null)).replace(/```json|```/g,'').trim();
     const r=JSON.parse(raw);
 
     // Fill in the form fields
@@ -1211,8 +1215,8 @@ Respond ONLY with a JSON object (no markdown, no backticks):
   const apiKey=getS().apiKey||'';
   if(!apiKey){
     document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.05)">
-      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">⚠️ Gemini API Key Required</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">Add your free Gemini API key in <b style="color:var(--text)">Settings → AI Features</b>.<br><br>Get it free (no card) at <span style="color:var(--blue)">aistudio.google.com</span></div>
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">⚠️ Groq API Key Required</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">Add your free Groq API key in <b style="color:var(--text)">Settings → AI Features</b>.<br><br>Get it free (no card) at <span style="color:var(--blue)">console.groq.com</span></div>
       <button class="btn-p" style="margin:0" onclick="showPage('settings',document.getElementById('nav-settings'))">Open Settings →</button>
     </div>`;
     return;
@@ -1228,7 +1232,7 @@ Respond ONLY with a JSON object (no markdown, no backticks):
     } else {
       document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(248,113,113,.2);background:rgba(248,113,113,.05)">
         <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">❌ Error</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.6">${e.message||'Check your Gemini API key in Settings.'}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">${e.message||'Check your Groq API key in Settings.'}</div>
       </div>`;
     }
   }
@@ -1368,7 +1372,7 @@ async function generateAIReport(){
   if(!days.length){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--text2);font-size:13px">No data logged in this period yet.</div>`;return;}
   const prompt=`You are a professional nutritionist giving a ${curPeriod}ly summary report.\nUser goals: ${s.cal} kcal/day, ${s.prot}g protein/day\nPeriod: ${start} to ${end}\nData: ${JSON.stringify(days)}\nWrite a 3-4 sentence professional nutritionist report covering: calorie adherence, protein intake, patterns noticed, and 2 actionable recommendations. Keep it encouraging. Plain text only.`;
   const apiKey=getS().apiKey||'';
-  if(!apiKey){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--amber);font-size:13px;font-weight:600">⚠️ Add your free Gemini API key in Settings → AI Features.</div>`;return;}
+  if(!apiKey){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--amber);font-size:13px;font-weight:600">⚠️ Add your free Groq API key in Settings → AI Features.</div>`;return;}
   try{
     const text=await geminiCall(prompt);
     document.getElementById('report-ai-content').innerHTML=`<div class="ai-result"><div style="font-size:13px;line-height:1.7;color:var(--text)">${text}</div></div>`;
