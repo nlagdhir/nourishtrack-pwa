@@ -3,431 +3,643 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="theme-color" content="#0d1117"/>
+<meta name="theme-color" content="#0A0A0F"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <meta name="apple-mobile-web-app-title" content="NourishTrack"/>
 <link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-180.png"/>
+<link rel="shortcut icon" href="favicon.ico"/>
 <title>NourishTrack</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --bg: #0d1117;
-  --bg2: #161b22;
-  --bg3: #21262d;
-  --border: #30363d;
-  --green: #00e5a0;
-  --green2: #00b87a;
-  --amber: #f5a623;
-  --red: #ff6b6b;
-  --blue: #58a6ff;
-  --purple: #bc8cff;
-  --text: #e6edf3;
-  --text2: #8b949e;
-  --text3: #484f58;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+:root{
+  --bg:#0A0A0F;
+  --bg2:#12121A;
+  --bg3:#1C1C28;
+  --bg4:#242434;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --accent:#4ADE80;
+  --accent2:#22C55E;
+  --accentd:#16A34A;
+  --amber:#FBBF24;
+  --red:#F87171;
+  --blue:#60A5FA;
+  --purple:#A78BFA;
+  --pink:#F472B6;
+  --text:#F1F0F5;
+  --text2:#8B8BA0;
+  --text3:#4A4A60;
+  --r:18px;
+  --r-sm:12px;
+  --r-xs:8px;
+  --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --font-display:'Playfair Display',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px}
-#app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
+html{height:100%;background:var(--bg)}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;-webkit-font-smoothing:antialiased}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+
+/* STATUS BAR FIX — fills safe area with same bg, no line */
+#app::before{
+  content:'';
+  display:block;
+  position:fixed;
+  top:0;left:50%;
+  transform:translateX(-50%);
+  width:100%;max-width:430px;
+  height:var(--st);
+  background:var(--bg);
+  z-index:999;
+}
+
+/* PAGES */
+.page{display:none;flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:calc(var(--st) + 20px) 18px calc(110px + var(--sb));
+  scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.page.active{display:block}
+::-webkit-scrollbar{display:none}
 
 /* NAV */
 .nav{
   display:flex;justify-content:space-around;align-items:center;
-  background:rgba(13,17,23,0.95);backdrop-filter:blur(20px);
+  background:rgba(10,10,15,0.92);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-top:1px solid var(--border);
-  padding:8px 0 calc(8px + var(--safe-bottom));
+  padding:10px 0 calc(10px + var(--sb));
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;z-index:100;
+  width:100%;max-width:430px;z-index:100;
 }
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border:none;background:none;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;transition:color .2s}
-.nav-btn.active{color:var(--green)}
-.nav-btn svg{width:22px;height:22px}
-.nav-btn .dot{width:4px;height:4px;border-radius:50%;background:var(--green);opacity:0;transition:opacity .2s}
-.nav-btn.active .dot{opacity:1}
-
-/* PAGES */
-.page{display:none;flex:1;overflow-y:auto;padding:calc(var(--safe-top) + 16px) 16px calc(100px + var(--safe-bottom));scroll-behavior:smooth}
-.page.active{display:block}
-
-/* HEADER */
-.page-header{margin-bottom:24px}
-.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1.1}
-.page-sub{color:var(--text2);font-size:13px;margin-top:4px}
-
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
-.card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px}
-
-/* CALORY RING */
-.ring-wrap{display:flex;justify-content:center;padding:8px 0 4px}
-.ring-container{position:relative;width:160px;height:160px}
-.ring-container svg{transform:rotate(-90deg)}
-.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.ring-cal{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1}
-.ring-label{font-size:11px;color:var(--text2);margin-top:2px}
-.ring-goal{font-size:12px;color:var(--text2)}
-
-/* MACRO BARS */
-.macro-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.macro-card{background:var(--bg3);border-radius:var(--radius-sm);padding:10px;text-align:center}
-.macro-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
-.macro-name{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.macro-bar-wrap{height:3px;background:var(--bg);border-radius:2px;margin-top:6px;overflow:hidden}
-.macro-bar{height:100%;border-radius:2px;transition:width .5s}
-
-/* MEAL LOG */
-.meal-section{margin-bottom:8px}
-.meal-type-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.meal-type-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.meal-cal-count{font-size:12px;color:var(--text2)}
-.meal-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:6px;position:relative}
-.meal-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
-.meal-info{flex:1;min-width:0}
-.meal-name{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meal-detail{font-size:12px;color:var(--text2);margin-top:2px}
-.meal-cal{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--green);flex-shrink:0}
-.delete-btn{position:absolute;top:4px;right:4px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;padding:2px}
-.delete-btn:hover{color:var(--red)}
-
-/* ADD MEAL BUTTON */
-.add-meal-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;transition:all .2s;margin-bottom:6px}
-.add-meal-btn:hover{border-color:var(--green);color:var(--green)}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 14px;border:none;background:none;
+  color:var(--text3);cursor:pointer;
+  font-family:var(--font);font-size:10px;font-weight:600;
+  letter-spacing:.4px;text-transform:uppercase;
+  transition:all .25s;position:relative;
+}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px;transition:transform .2s}
+.nav-btn.active svg{transform:scale(1.1)}
+.nav-pill{
+  position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+  width:20px;height:3px;border-radius:2px;background:var(--accent);
+  opacity:0;transition:opacity .25s;
+}
+.nav-btn.active .nav-pill{opacity:1}
 
 /* FAB */
-.fab{position:fixed;right:20px;bottom:calc(76px + var(--safe-bottom));width:52px;height:52px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,229,160,.35);transition:transform .15s,box-shadow .15s;z-index:99}
-.fab:active{transform:scale(.93);box-shadow:0 2px 10px rgba(0,229,160,.25)}
+.fab{
+  position:fixed;right:20px;bottom:calc(80px + var(--sb));
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px rgba(74,222,128,.2), 0 8px 24px rgba(74,222,128,.3);
+  transition:transform .15s,box-shadow .15s;z-index:99;
+}
+.fab:active{transform:scale(.93);box-shadow:0 4px 12px rgba(74,222,128,.2)}
 .fab svg{color:#000;width:22px;height:22px}
 
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + var(--safe-bottom));width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.22,1,.36,1)}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 18px}
-.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+/* PAGE HEADER */
+.page-header{margin-bottom:22px;padding-top:4px}
+.greeting{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:4px;letter-spacing:.2px}
+.page-title{font-family:var(--font-display);font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-.3px}
+.page-sub{color:var(--text2);font-size:13px;margin-top:5px}
 
-/* FORM ELEMENTS */
-.form-group{margin-bottom:14px}
-.form-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:6px;display:block}
-.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s;-webkit-appearance:none}
-.form-input:focus{border-color:var(--green)}
-.form-input::placeholder{color:var(--text3)}
-select.form-input option{background:var(--bg2)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.photo-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;transition:all .2s}
-.photo-btn:hover{border-color:var(--green);color:var(--green)}
-.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius-sm);margin-top:8px;display:none}
-.btn-primary{width:100%;padding:14px;background:var(--green);border:none;border-radius:var(--radius-sm);color:#000;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px;letter-spacing:.3px}
-.btn-primary:active{opacity:.85}
-.btn-secondary{width:100%;padding:13px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+/* CARDS */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:18px;margin-bottom:12px;
+  position:relative;overflow:hidden;
+}
+.card-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--text3);margin-bottom:12px;
+}
+.card-glass{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:18px;margin-bottom:12px;
+  backdrop-filter:blur(10px);
+}
 
-/* DRINK TYPES */
-.drink-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.drink-chip{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer;transition:all .2s}
-.drink-chip.selected{background:rgba(0,229,160,.15);border-color:var(--green);color:var(--green)}
+/* CALORIE HERO CARD */
+.hero-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:20px 18px 16px;
+  margin-bottom:12px;
+  position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(74,222,128,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.ring-wrap{display:flex;justify-content:center;padding:8px 0 12px}
+.ring-container{position:relative;width:170px;height:170px}
+.ring-container svg{transform:rotate(-90deg)}
+.ring-bg{stroke:var(--bg3)}
+.ring-track{
+  stroke-dasharray:490;stroke-dashoffset:490;
+  transition:stroke-dashoffset .9s cubic-bezier(.22,1,.36,1),stroke .3s;
+  stroke-linecap:round;
+}
+.ring-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;
+}
+.ring-cal-num{font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1;letter-spacing:-1px}
+.ring-cal-label{font-size:11px;color:var(--text2);margin-top:3px;font-weight:500}
+.ring-remaining{font-size:11px;color:var(--text2);margin-top:2px}
+.ring-status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
 
-/* AI ANALYSIS */
-.ai-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(188,140,255,.15);border:1px solid rgba(188,140,255,.3);color:var(--purple);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
-.ai-result{background:linear-gradient(135deg,rgba(0,229,160,.06),rgba(88,166,255,.06));border:1px solid rgba(0,229,160,.2);border-radius:var(--radius);padding:14px;margin-top:10px}
-.ai-loading{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:13px}
-.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.2s infinite}
+/* MACRO PILLS */
+.macro-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.macro-pill{
+  background:var(--bg3);border-radius:var(--r-sm);
+  padding:12px 8px 10px;text-align:center;
+  border:1px solid var(--border);
+  transition:border-color .2s;
+}
+.macro-num{font-size:17px;font-weight:700;line-height:1;letter-spacing:-.3px}
+.macro-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;font-weight:600}
+.macro-prog{height:2px;border-radius:1px;background:var(--bg4);margin-top:8px;overflow:hidden}
+.macro-prog-fill{height:100%;border-radius:1px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+
+/* WATER */
+.water-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.water-label{font-size:13px;font-weight:600;color:var(--text)}
+.water-count{font-size:13px;font-weight:700;color:var(--blue)}
+.water-glasses{display:flex;gap:6px;flex-wrap:wrap}
+.wg{
+  width:32px;height:32px;border-radius:var(--r-xs);
+  border:1.5px solid var(--border2);background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:all .18s;
+}
+.wg.on{border-color:var(--blue);background:rgba(96,165,250,.15)}
+
+/* MEAL SECTIONS */
+.meal-section{margin-bottom:10px}
+.meal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+}
+.meal-head-left{display:flex;align-items:center;gap:8px}
+.meal-icon{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:var(--bg3);border:1px solid var(--border);
+}
+.meal-type-name{font-size:13px;font-weight:700;letter-spacing:.2px}
+.meal-cal-badge{
+  font-size:11px;font-weight:700;color:var(--text2);
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:20px;padding:3px 9px;
+}
+.meal-item{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 12px;background:var(--bg3);
+  border-radius:var(--r-sm);margin-bottom:6px;
+  border:1px solid var(--border);
+  position:relative;transition:border-color .15s;
+}
+.meal-item:active{border-color:var(--border2)}
+.meal-thumb{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--bg4);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  overflow:hidden;
+}
+.meal-thumb img{width:100%;height:100%;object-fit:cover}
+.meal-info{flex:1;min-width:0}
+.meal-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.1px}
+.meal-detail{font-size:11px;color:var(--text2);margin-top:3px;font-weight:500}
+.meal-cal{font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0;letter-spacing:-.3px}
+.del-btn{
+  position:absolute;top:6px;right:6px;
+  background:none;border:none;color:var(--text3);
+  cursor:pointer;font-size:13px;padding:2px 4px;
+  border-radius:4px;transition:all .15s;line-height:1;
+}
+.del-btn:hover{color:var(--red);background:rgba(248,113,113,.1)}
+.add-row-btn{
+  display:flex;align-items:center;gap:7px;width:100%;
+  padding:10px 12px;background:transparent;
+  border:1.5px dashed var(--border);border-radius:var(--r-sm);
+  color:var(--text2);cursor:pointer;
+  font-family:var(--font);font-size:13px;font-weight:500;
+  transition:all .2s;margin-bottom:4px;
+}
+.add-row-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* AI CARD */
+.ai-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.25);
+  color:var(--purple);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;
+}
+.ai-result{
+  background:rgba(74,222,128,.05);
+  border:1px solid rgba(74,222,128,.15);
+  border-radius:var(--r-sm);padding:14px;margin-top:8px;
+}
+.ai-loading{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px}
+.ai-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:aipulse 1.3s infinite}
 .ai-dot:nth-child(2){animation-delay:.2s}
 .ai-dot:nth-child(3){animation-delay:.4s}
-@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
-.ai-insights{font-size:13px;line-height:1.6;color:var(--text)}
-.ai-insight-item{display:flex;gap:8px;margin-bottom:8px;padding:8px;background:rgba(0,0,0,.2);border-radius:8px}
-.ai-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+@keyframes aipulse{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.1)}}
+.ai-insight-item{display:flex;gap:8px;margin-bottom:8px;font-size:13px;line-height:1.6;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px}
+.ai-icon{font-size:15px;flex-shrink:0}
 
-/* STATS */
+/* STAT CARDS */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
-.stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
-.stat-unit{font-size:12px;color:var(--text2);margin-left:2px}
-.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.stat-change{font-size:12px;margin-top:4px;font-weight:500}
-.pos{color:var(--green)}.neg{color:var(--red)}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;
+}
+.stat-val{font-family:var(--font-display);font-size:26px;font-weight:800;line-height:1;letter-spacing:-1px}
+.stat-unit{font-size:13px;font-weight:500;color:var(--text2);margin-left:1px}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:5px;font-weight:600}
+.stat-change{font-size:12px;margin-top:5px;font-weight:600}
+.pos{color:var(--accent)}.neg{color:var(--red)}
 
-/* WEIGHT CHART */
-.chart-area{width:100%;height:140px;position:relative;overflow:hidden}
+/* CHART */
+.chart-wrap{width:100%;height:130px;position:relative}
 canvas{width:100%;height:100%}
 
-/* PROGRESS RING MINI */
-.mini-ring{display:flex;align-items:center;gap:12px}
-.mini-ring-info{flex:1}
-.mini-ring-label{font-size:13px;font-weight:500}
-.mini-ring-val{font-size:12px;color:var(--text2);margin-top:2px}
-.progress-bar-h{height:6px;background:var(--bg3);border-radius:3px;margin-top:6px;overflow:hidden}
-.progress-bar-h-fill{height:100%;border-radius:3px;transition:width .6s}
+/* METRIC LOG */
+.metric-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;background:var(--bg3);border-radius:var(--r-sm);
+  border:1px solid var(--border);margin-bottom:6px;
+}
+.metric-date{font-size:12px;color:var(--text2);flex:1;font-weight:500}
+.metric-val-group{display:flex;gap:16px}
+.metric-item{text-align:right}
+.metric-num{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.metric-unit-sm{font-size:10px;color:var(--text2);font-weight:500}
 
 /* REPORT */
-.report-period{display:flex;gap:8px;margin-bottom:16px}
-.period-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-align:center}
-.period-btn.active{background:rgba(0,229,160,.1);border-color:var(--green);color:var(--green)}
-.report-table{width:100%;border-collapse:collapse;font-size:13px}
-.report-table th{text-align:left;padding:8px 4px;color:var(--text2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
-.report-table td{padding:9px 4px;border-bottom:1px solid rgba(48,54,61,.5)}
-.report-table tr:last-child td{border-bottom:none}
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.tag-good{background:rgba(0,229,160,.15);color:var(--green)}
-.tag-warn{background:rgba(245,166,35,.15);color:var(--amber)}
-.tag-bad{background:rgba(255,107,107,.15);color:var(--red)}
-.export-btn{display:flex;align-items:center;gap:8px;width:100%;padding:13px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:8px;transition:border-color .2s}
-.export-btn:hover{border-color:var(--blue)}
-.export-btn svg{color:var(--blue)}
+.period-row{display:flex;gap:8px;margin-bottom:16px}
+.period-btn{
+  flex:1;padding:11px;border:1px solid var(--border);
+  border-radius:var(--r-sm);background:transparent;
+  color:var(--text2);font-family:var(--font);font-size:13px;
+  font-weight:600;cursor:pointer;transition:all .2s;text-align:center;
+}
+.period-btn.active{
+  background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.4);
+  color:var(--accent);
+}
+.rpt-table{width:100%;border-collapse:collapse;font-size:13px}
+.rpt-table th{
+  text-align:left;padding:8px 6px;color:var(--text2);
+  font-weight:600;font-size:10px;text-transform:uppercase;
+  letter-spacing:.8px;border-bottom:1px solid var(--border);
+}
+.rpt-table td{padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.04)}
+.rpt-table tr:last-child td{border-bottom:none}
+.tag{display:inline-block;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700}
+.tag-good{background:rgba(74,222,128,.12);color:var(--accent)}
+.tag-warn{background:rgba(251,191,36,.12);color:var(--amber)}
+.tag-bad{background:rgba(248,113,113,.12);color:var(--red)}
+.action-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:14px 16px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);cursor:pointer;
+  font-family:var(--font);font-size:14px;font-weight:500;
+  margin-bottom:8px;transition:border-color .2s;
+}
+.action-btn:hover{border-color:var(--border2)}
+.action-btn-icon{
+  width:34px;height:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  flex-shrink:0;
+}
 
-/* BODY METRICS */
-.metric-log-row{display:flex;align-items:center;gap:10px;padding:11px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:6px}
-.metric-date{font-size:12px;color:var(--text2);flex:1}
-.metric-val-group{display:flex;gap:16px}
-.metric-item{text-align:center}
-.metric-num{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
-.metric-unit-sm{font-size:10px;color:var(--text2)}
-.water-tracker{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.water-glass{width:36px;height:36px;border-radius:8px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
-.water-glass.filled{border-color:var(--blue);background:rgba(88,166,255,.15)}
+/* SETTINGS */
+.settings-section-title{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--text3);margin:20px 0 8px;
+}
+.settings-section-title:first-child{margin-top:0}
 
-/* SCROLL */
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* MODAL */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);z-index:200;
+  align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex}
+.sheet{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:24px 24px 0 0;
+  padding:12px 18px calc(18px + var(--sb));
+  width:100%;max-width:430px;
+  max-height:92vh;overflow-y:auto;
+  animation:sheetUp .3s cubic-bezier(.22,1,.36,1);
+}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{
+  width:32px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 18px;
+}
+.sheet-title{
+  font-family:var(--font-display);font-size:22px;font-weight:800;
+  margin-bottom:20px;letter-spacing:-.3px;
+}
+
+/* FORM */
+.fg{margin-bottom:14px}
+.fl{
+  display:block;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text2);margin-bottom:6px;
+}
+.fi{
+  width:100%;background:var(--bg3);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:12px 14px;color:var(--text);
+  font-family:var(--font);font-size:15px;font-weight:500;
+  outline:none;transition:border-color .2s;-webkit-appearance:none;
+  -webkit-text-fill-color:var(--text);
+}
+.fi:focus{border-color:rgba(74,222,128,.4)}
+.fi::placeholder{color:var(--text3)}
+select.fi option{background:var(--bg2)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{
+  padding:7px 13px;border-radius:20px;
+  border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .18s;font-family:var(--font);
+}
+.chip.on{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.4);color:var(--accent)}
+.photo-area{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px;background:var(--bg3);
+  border:1.5px dashed var(--border2);border-radius:var(--r-sm);
+  color:var(--text2);cursor:pointer;
+  font-family:var(--font);font-size:14px;font-weight:500;
+  transition:all .2s;
+}
+.photo-area:hover{border-color:var(--accent);color:var(--accent)}
+.photo-prev{width:100%;max-height:180px;object-fit:cover;border-radius:var(--r-sm);margin-top:8px;display:none;border:1px solid var(--border)}
+.btn-p{
+  width:100%;padding:15px;background:var(--accent);
+  border:none;border-radius:var(--r-sm);color:#000;
+  font-family:var(--font);font-size:15px;font-weight:800;
+  cursor:pointer;transition:opacity .15s;margin-top:6px;letter-spacing:.2px;
+}
+.btn-p:active{opacity:.85}
+.btn-s{
+  width:100%;padding:14px;background:transparent;
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text2);font-family:var(--font);font-size:14px;
+  font-weight:500;cursor:pointer;margin-top:8px;transition:border-color .2s;
+}
+.btn-s:hover{border-color:var(--border2);color:var(--text)}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 20px;color:var(--text2)}
+.empty-icon{font-size:44px;margin-bottom:12px;opacity:.7}
+.empty-text{font-size:14px;line-height:1.6}
+
+/* STREAK BADGE */
+.streak-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);
+  border-radius:20px;padding:6px 12px;
+}
+.streak-text{font-size:12px;font-weight:700;color:var(--amber)}
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:30px;padding:10px 18px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast{
+  position:fixed;bottom:calc(96px + var(--sb));left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:30px;padding:10px 18px;font-size:13px;font-weight:600;
+  z-index:500;opacity:0;transition:all .3s;pointer-events:none;
+  white-space:nowrap;color:var(--text);
+}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* EMPTY STATE */
-.empty{text-align:center;padding:40px 20px;color:var(--text2)}
-.empty-icon{font-size:48px;margin-bottom:12px}
-.empty-text{font-size:14px}
-
-/* DATE PICKER ROW */
-.date-nav{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px}
-.date-nav-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;display:flex;align-items:center}
-.date-nav-btn:hover{color:var(--green)}
-.date-display{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+/* SECTION DIVIDER */
+.sdiv{height:1px;background:var(--border);margin:16px 0}
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- PAGES -->
+<!-- TODAY -->
 <div class="page active" id="page-today">
   <div class="page-header">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="page-title">Today's Log 🌿</div>
+        <div class="greeting" id="greeting-text">Good morning</div>
+        <div class="page-title">Daily Log</div>
         <div class="page-sub" id="today-date-label"></div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Streak</div>
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--amber)">🔥 <span id="streak-count">0</span></div>
+      <div class="streak-badge">
+        <span style="font-size:16px">🔥</span>
+        <span class="streak-text"><span id="streak-count">0</span> day streak</span>
       </div>
     </div>
   </div>
 
-  <!-- CALORY RING -->
-  <div class="card">
+  <!-- CALORIE HERO -->
+  <div class="hero-card">
     <div class="card-label">Calorie Balance</div>
     <div class="ring-wrap">
       <div class="ring-container">
-        <svg width="160" height="160" viewBox="0 0 160 160">
-          <circle cx="80" cy="80" r="68" fill="none" stroke="#21262d" stroke-width="12"/>
-          <circle id="cal-ring" cx="80" cy="80" r="68" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round"
-            stroke-dasharray="427" stroke-dashoffset="427" style="transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)"/>
+        <svg width="170" height="170" viewBox="0 0 170 170">
+          <circle class="ring-bg" cx="85" cy="85" r="78" fill="none" stroke-width="11"/>
+          <circle id="cal-ring" class="ring-track" cx="85" cy="85" r="78" fill="none" stroke="#4ADE80" stroke-width="11"/>
         </svg>
         <div class="ring-center">
-          <div class="ring-cal" id="ring-cal-num">0</div>
-          <div class="ring-label">consumed</div>
-          <div class="ring-goal" id="ring-goal-text">of 2000 kcal</div>
+          <div class="ring-cal-num" id="ring-cal-num">0</div>
+          <div class="ring-cal-label">kcal eaten</div>
+          <div class="ring-remaining" id="ring-remaining"></div>
         </div>
       </div>
     </div>
     <div class="macro-row">
-      <div class="macro-card">
-        <div class="macro-val" id="prot-val" style="color:var(--blue)">0g</div>
-        <div class="macro-name">Protein</div>
-        <div class="macro-bar-wrap"><div class="macro-bar" id="prot-bar" style="background:var(--blue);width:0%"></div></div>
+      <div class="macro-pill">
+        <div class="macro-num" id="prot-val" style="color:var(--blue)">0g</div>
+        <div class="macro-lbl">Protein</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="prot-bar" style="background:var(--blue);width:0%"></div></div>
       </div>
-      <div class="macro-card">
-        <div class="macro-val" id="carb-val" style="color:var(--amber)">0g</div>
-        <div class="macro-name">Carbs</div>
-        <div class="macro-bar-wrap"><div class="macro-bar" id="carb-bar" style="background:var(--amber);width:0%"></div></div>
+      <div class="macro-pill">
+        <div class="macro-num" id="carb-val" style="color:var(--amber)">0g</div>
+        <div class="macro-lbl">Carbs</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="carb-bar" style="background:var(--amber);width:0%"></div></div>
       </div>
-      <div class="macro-card">
-        <div class="macro-val" id="fat-val" style="color:var(--purple)">0g</div>
-        <div class="macro-name">Fat</div>
-        <div class="macro-bar-wrap"><div class="macro-bar" id="fat-bar" style="background:var(--purple);width:0%"></div></div>
+      <div class="macro-pill">
+        <div class="macro-num" id="fat-val" style="color:var(--pink)">0g</div>
+        <div class="macro-lbl">Fat</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="fat-bar" style="background:var(--pink);width:0%"></div></div>
       </div>
     </div>
   </div>
 
   <!-- WATER -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="card-label" style="margin:0">💧 Water Intake</div>
-      <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--blue)" id="water-total">0 / 8 glasses</span>
+    <div class="water-row">
+      <div class="water-label">💧 Hydration</div>
+      <div class="water-count" id="water-total">0 / 8 glasses</div>
     </div>
-    <div class="water-tracker" id="water-tracker"></div>
+    <div class="water-glasses" id="water-tracker"></div>
   </div>
 
   <!-- MEALS -->
   <div id="meals-container"></div>
 
-  <!-- AI ANALYSIS -->
+  <!-- AI -->
   <div class="card" id="ai-card" style="display:none">
-    <div class="ai-badge">✦ AI Analysis</div>
+    <div class="ai-badge">✦ AI Nutritionist</div>
     <div id="ai-content"></div>
   </div>
-
-  <div style="height:20px"></div>
 </div>
 
-<!-- BODY METRICS PAGE -->
+<!-- BODY -->
 <div class="page" id="page-body">
   <div class="page-header">
-    <div class="page-title">Body Metrics 📊</div>
-    <div class="page-sub">Track weight & measurements</div>
+    <div class="page-title">Body Metrics</div>
+    <div class="page-sub">Track your progress over time</div>
   </div>
-
   <div class="stats-grid">
     <div class="stat-card">
-      <div><span class="stat-val" id="curr-weight">--</span><span class="stat-unit">kg</span></div>
-      <div class="stat-label">Current Weight</div>
+      <div><span class="stat-val" id="curr-weight">--</span><span class="stat-unit"> kg</span></div>
+      <div class="stat-label">Weight</div>
       <div class="stat-change" id="weight-change"></div>
     </div>
     <div class="stat-card">
-      <div><span class="stat-val" id="curr-waist">--</span><span class="stat-unit">cm</span></div>
+      <div><span class="stat-val" id="curr-waist">--</span><span class="stat-unit"> cm</span></div>
       <div class="stat-label">Waist</div>
       <div class="stat-change" id="waist-change"></div>
     </div>
   </div>
-
   <div class="card">
     <div class="card-label">Weight Trend</div>
-    <div class="chart-area"><canvas id="weight-chart"></canvas></div>
+    <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
   </div>
-
   <div class="card">
-    <div class="card-label">Measurement Log</div>
+    <div class="card-label">Measurement History</div>
     <div id="metrics-log"></div>
   </div>
-
-  <div class="card" style="margin-bottom:12px">
-    <button class="btn-primary" onclick="openModal('metric-modal')" style="margin:0">+ Log Weight & Waist</button>
-  </div>
+  <button class="btn-p" style="margin-bottom:12px" onclick="openModal('metric-modal')">+ Log Today's Measurements</button>
 </div>
 
-<!-- REPORTS PAGE -->
+<!-- REPORTS -->
 <div class="page" id="page-reports">
   <div class="page-header">
-    <div class="page-title">Reports 📋</div>
-    <div class="page-sub">Weekly & monthly summaries</div>
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Weekly & monthly overview</div>
   </div>
-
-  <div class="report-period">
-    <button class="period-btn active" onclick="setReportPeriod('week',this)">Weekly</button>
-    <button class="period-btn" onclick="setReportPeriod('month',this)">Monthly</button>
+  <div class="period-row">
+    <button class="period-btn active" onclick="setReportPeriod('week',this)">This Week</button>
+    <button class="period-btn" onclick="setReportPeriod('month',this)">This Month</button>
   </div>
-
-  <!-- SUMMARY STATS -->
   <div class="stats-grid" id="report-stats"></div>
-
-  <!-- AI REPORT SUMMARY -->
   <div class="card" id="report-ai-card">
     <div class="ai-badge">✦ AI Nutritionist Report</div>
-    <div id="report-ai-content"><div style="color:var(--text2);font-size:13px">Generate a report below to get AI insights.</div></div>
+    <div id="report-ai-content" style="color:var(--text2);font-size:13px">Generate a report below for AI-powered insights.</div>
   </div>
-
   <div class="card">
-    <div class="card-label">Daily Log</div>
-    <table class="report-table" id="report-table">
+    <div class="card-label">Daily Breakdown</div>
+    <table class="rpt-table">
       <thead><tr><th>Date</th><th>Cal</th><th>Protein</th><th>Status</th></tr></thead>
       <tbody id="report-tbody"></tbody>
     </table>
   </div>
-
   <div class="card">
-    <div class="card-label">Export Options</div>
-    <button class="export-btn" onclick="exportCSV()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export as CSV
+    <div class="card-label">Export</div>
+    <button class="action-btn" onclick="exportCSV()">
+      <div class="action-btn-icon" style="background:rgba(96,165,250,.1)">📥</div>
+      <div><div style="font-weight:600">Export as CSV</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Download your nutrition data</div></div>
     </button>
-    <button class="export-btn" onclick="generateAIReport()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-      Generate AI Report
+    <button class="action-btn" onclick="generateAIReport()">
+      <div class="action-btn-icon" style="background:rgba(167,139,250,.1)">✦</div>
+      <div><div style="font-weight:600">Generate AI Report</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Get personalised nutritionist insights</div></div>
     </button>
   </div>
 </div>
 
-<!-- SETTINGS PAGE -->
+<!-- SETTINGS -->
 <div class="page" id="page-settings">
   <div class="page-header">
-    <div class="page-title">Settings ⚙️</div>
-    <div class="page-sub">Personalize your goals</div>
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Personalise your goals</div>
   </div>
 
+  <div class="settings-section-title">Daily Calorie & Macro Goals</div>
   <div class="card">
-    <div class="card-label">Daily Goals</div>
-    <div class="form-group">
-      <label class="form-label">Calorie Goal (kcal)</label>
-      <input class="form-input" type="number" id="goal-cal" value="2000" onchange="saveSettings()"/>
+    <div class="fg">
+      <label class="fl">Calorie Goal (kcal)</label>
+      <input class="fi" type="number" id="goal-cal" value="2000" onchange="saveSettings()"/>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Protein (g)</label>
-        <input class="form-input" type="number" id="goal-prot" value="120" onchange="saveSettings()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Carbs (g)</label>
-        <input class="form-input" type="number" id="goal-carb" value="250" onchange="saveSettings()"/>
-      </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Protein (g)</label><input class="fi" type="number" id="goal-prot" value="120" onchange="saveSettings()"/></div>
+      <div class="fg"><label class="fl">Carbs (g)</label><input class="fi" type="number" id="goal-carb" value="250" onchange="saveSettings()"/></div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Fat (g)</label>
-        <input class="form-input" type="number" id="goal-fat" value="65" onchange="saveSettings()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Water (glasses)</label>
-        <input class="form-input" type="number" id="goal-water" value="8" onchange="saveSettings()"/>
-      </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Fat (g)</label><input class="fi" type="number" id="goal-fat" value="65" onchange="saveSettings()"/></div>
+      <div class="fg"><label class="fl">Water (glasses)</label><input class="fi" type="number" id="goal-water" value="8" onchange="saveSettings()"/></div>
     </div>
   </div>
 
+  <div class="settings-section-title">Personal Info</div>
   <div class="card">
-    <div class="card-label">Personal Info</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Target Weight (kg)</label>
-        <input class="form-input" type="number" id="target-weight" value="" placeholder="e.g. 70" onchange="saveSettings()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Target Waist (cm)</label>
-        <input class="form-input" type="number" id="target-waist" value="" placeholder="e.g. 80" onchange="saveSettings()"/>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Name</label>
-      <input class="form-input" type="text" id="user-name" placeholder="Your name" onchange="saveSettings()"/>
+    <div class="fg"><label class="fl">Your Name</label><input class="fi" type="text" id="user-name" placeholder="e.g. Nilesh" onchange="saveSettings()"/></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Target Weight (kg)</label><input class="fi" type="number" id="target-weight" placeholder="e.g. 70" onchange="saveSettings()"/></div>
+      <div class="fg"><label class="fl">Target Waist (cm)</label><input class="fi" type="number" id="target-waist" placeholder="e.g. 80" onchange="saveSettings()"/></div>
     </div>
   </div>
 
+  <div class="settings-section-title">AI Features</div>
   <div class="card">
-    <div class="card-label">App Info</div>
-    <div style="color:var(--text2);font-size:13px;line-height:1.7">
-      <b style="color:var(--text)">NourishTrack v1.0</b><br>
-      Install on iPhone: tap Share → "Add to Home Screen"<br>
-      Install on Android: tap Menu → "Add to Home Screen"<br>
-      All data stored locally on your device.
+    <div class="fg">
+      <label class="fl">Anthropic API Key</label>
+      <input class="fi" type="password" id="api-key" placeholder="sk-ant-..." onchange="saveSettings()"/>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:4px">
+      Required for AI nutrition analysis. Get a free key at
+      <span style="color:var(--blue)">console.anthropic.com</span>
     </div>
   </div>
-  <div class="card" style="border-color:rgba(255,107,107,.3)">
-    <div class="card-label" style="color:var(--red)">Danger Zone</div>
-    <button class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="clearAllData()">Clear All Data</button>
+
+  <div class="settings-section-title">App Info</div>
+  <div class="card">
+    <div style="color:var(--text2);font-size:13px;line-height:1.8">
+      <div style="color:var(--text);font-weight:700;margin-bottom:4px">NourishTrack v1.1</div>
+      All data stored privately on your device.<br>
+      <span style="color:var(--text3)">iPhone: Share → Add to Home Screen<br>Android: Menu → Install App</span>
+    </div>
+  </div>
+
+  <div class="settings-section-title" style="color:rgba(248,113,113,.5)">Danger Zone</div>
+  <div class="card" style="border-color:rgba(248,113,113,.15)">
+    <button class="btn-s" style="border-color:rgba(248,113,113,.3);color:var(--red)" onclick="clearAllData()">Clear All Data</button>
   </div>
 </div>
 
@@ -436,164 +648,107 @@ canvas{width:100%;height:100%}
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
-<!-- BOTTOM NAV -->
+<!-- NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="showPage('today',this)" id="nav-today">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-    Today
-    <div class="dot"></div>
+    Today<div class="nav-pill"></div>
   </button>
   <button class="nav-btn" onclick="showPage('body',this)" id="nav-body">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v6M9 11h6M9 21l3-7 3 7"/></svg>
-    Body
-    <div class="dot"></div>
+    Body<div class="nav-pill"></div>
   </button>
   <button class="nav-btn" onclick="showPage('reports',this)" id="nav-reports">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    Reports
-    <div class="dot"></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+    Reports<div class="nav-pill"></div>
   </button>
   <button class="nav-btn" onclick="showPage('settings',this)" id="nav-settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Settings
-    <div class="dot"></div>
+    Settings<div class="nav-pill"></div>
   </button>
 </nav>
 
-<!-- ADD FOOD/DRINK MODAL -->
-<div class="modal-overlay" id="add-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="add-modal-title">Add Food</div>
-
-    <div id="type-selector" style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="drink-chip selected" onclick="setEntryType('food',this)">🍽 Food</button>
-      <button class="drink-chip" onclick="setEntryType('drink',this)">🥤 Drink</button>
+<!-- ADD MODAL -->
+<div class="overlay" id="add-modal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="add-modal-title">Add Entry</div>
+    <div id="type-sel" style="display:flex;gap:8px;margin-bottom:18px">
+      <button class="chip on" onclick="setType('food',this)">🍽 Food</button>
+      <button class="chip" onclick="setType('drink',this)">🥤 Drink</button>
     </div>
-
-    <!-- FOOD FORM -->
     <div id="food-form">
-      <div class="form-group">
-        <label class="form-label">Meal Type</label>
-        <select class="form-input" id="meal-type">
-          <option>Breakfast</option>
-          <option>Lunch</option>
-          <option>Dinner</option>
-          <option>Snack</option>
-        </select>
+      <div class="fg"><label class="fl">Meal</label>
+        <select class="fi" id="meal-type"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Food Name</label>
-        <input class="form-input" type="text" id="food-name" placeholder="e.g. Grilled chicken, Rice..."/>
+      <div class="fg"><label class="fl">Food Name</label><input class="fi" type="text" id="food-name" placeholder="e.g. Grilled chicken, Rice..."/></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Calories (kcal)</label><input class="fi" type="number" id="food-cal" placeholder="350"/></div>
+        <div class="fg"><label class="fl">Serving</label><input class="fi" type="text" id="food-serving" placeholder="200g"/></div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Calories (kcal)</label>
-          <input class="form-input" type="number" id="food-cal" placeholder="350"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Serving Size</label>
-          <input class="form-input" type="text" id="food-serving" placeholder="200g"/>
-        </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Protein (g)</label><input class="fi" type="number" id="food-prot" placeholder="25"/></div>
+        <div class="fg"><label class="fl">Carbs (g)</label><input class="fi" type="number" id="food-carb" placeholder="45"/></div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Protein (g)</label>
-          <input class="form-input" type="number" id="food-prot" placeholder="25"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Carbs (g)</label>
-          <input class="form-input" type="number" id="food-carb" placeholder="45"/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Fat (g)</label>
-        <input class="form-input" type="number" id="food-fat" placeholder="12"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Photo (optional)</label>
-        <label class="photo-btn">
+      <div class="fg"><label class="fl">Fat (g)</label><input class="fi" type="number" id="food-fat" placeholder="12"/></div>
+      <div class="fg"><label class="fl">Photo (optional)</label>
+        <label class="photo-area">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Take / Choose Photo
+          Take or Choose Photo
           <input type="file" accept="image/*" capture="environment" style="display:none" id="photo-input" onchange="handlePhoto(this)"/>
         </label>
-        <img id="photo-preview" class="photo-preview"/>
+        <img id="photo-prev" class="photo-prev"/>
       </div>
-      <button class="btn-primary" onclick="logFood()">Log Food</button>
+      <button class="btn-p" onclick="logFood()">Log Food</button>
     </div>
-
-    <!-- DRINK FORM -->
     <div id="drink-form" style="display:none">
-      <div class="form-group">
-        <label class="form-label">Drink Type</label>
-        <div class="drink-chips" id="drink-type-chips">
-          <div class="drink-chip selected" data-type="Water" onclick="selectDrink(this)">💧 Water</div>
-          <div class="drink-chip" data-type="Coffee" onclick="selectDrink(this)">☕ Coffee</div>
-          <div class="drink-chip" data-type="Tea" onclick="selectDrink(this)">🍵 Tea</div>
-          <div class="drink-chip" data-type="Juice" onclick="selectDrink(this)">🍊 Juice</div>
-          <div class="drink-chip" data-type="Soda" onclick="selectDrink(this)">🥤 Soda</div>
-          <div class="drink-chip" data-type="Protein Shake" onclick="selectDrink(this)">💪 Protein Shake</div>
-          <div class="drink-chip" data-type="Alcohol" onclick="selectDrink(this)">🍺 Alcohol</div>
-          <div class="drink-chip" data-type="Other" onclick="selectDrink(this)">Other</div>
+      <div class="fg"><label class="fl">Drink Type</label>
+        <div class="chip-row" id="drink-chips">
+          <div class="chip on" data-type="Water" onclick="selDrink(this)">💧 Water</div>
+          <div class="chip" data-type="Coffee" onclick="selDrink(this)">☕ Coffee</div>
+          <div class="chip" data-type="Tea" onclick="selDrink(this)">🍵 Tea</div>
+          <div class="chip" data-type="Juice" onclick="selDrink(this)">🍊 Juice</div>
+          <div class="chip" data-type="Soda" onclick="selDrink(this)">🥤 Soda</div>
+          <div class="chip" data-type="Protein Shake" onclick="selDrink(this)">💪 Shake</div>
+          <div class="chip" data-type="Alcohol" onclick="selDrink(this)">🍺 Alcohol</div>
+          <div class="chip" data-type="Other" onclick="selDrink(this)">Other</div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Amount (ml)</label>
-          <input class="form-input" type="number" id="drink-amount" placeholder="250"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Calories (kcal)</label>
-          <input class="form-input" type="number" id="drink-cal" placeholder="0"/>
-        </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Amount (ml)</label><input class="fi" type="number" id="drink-amount" placeholder="250"/></div>
+        <div class="fg"><label class="fl">Calories</label><input class="fi" type="number" id="drink-cal" placeholder="0"/></div>
       </div>
-      <button class="btn-primary" onclick="logDrink()">Log Drink</button>
+      <button class="btn-p" onclick="logDrink()">Log Drink</button>
     </div>
-    <button class="btn-secondary" onclick="closeModal('add-modal')">Cancel</button>
+    <button class="btn-s" onclick="closeModal('add-modal')">Cancel</button>
   </div>
 </div>
 
 <!-- METRIC MODAL -->
-<div class="modal-overlay" id="metric-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Log Body Metrics</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Weight (kg)</label>
-        <input class="form-input" type="number" id="m-weight" placeholder="70.5" step="0.1"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Waist (cm)</label>
-        <input class="form-input" type="number" id="m-waist" placeholder="82" step="0.5"/>
-      </div>
+<div class="overlay" id="metric-modal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Body Measurements</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Weight (kg)</label><input class="fi" type="number" id="m-weight" placeholder="70.5" step="0.1"/></div>
+      <div class="fg"><label class="fl">Waist (cm)</label><input class="fi" type="number" id="m-waist" placeholder="82" step="0.5"/></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Notes (optional)</label>
-      <input class="form-input" type="text" id="m-notes" placeholder="e.g. After workout..."/>
-    </div>
-    <button class="btn-primary" onclick="logMetric()">Save Metrics</button>
-    <button class="btn-secondary" onclick="closeModal('metric-modal')">Cancel</button>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" type="text" id="m-notes" placeholder="e.g. After workout..."/></div>
+    <button class="btn-p" onclick="logMetric()">Save Measurements</button>
+    <button class="btn-s" onclick="closeModal('metric-modal')">Cancel</button>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// DATA LAYER
-// ═══════════════════════════════════════════
-const DB = {
+const DB={
   get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
   set(k,v){localStorage.setItem(k,JSON.stringify(v))},
-  key(d){return 'log_'+d},
+  key(d){return'log_'+d},
   today(){return new Date().toISOString().split('T')[0]},
 };
-
-function getSettings(){
-  return DB.get('settings') || {cal:2000,prot:120,carb:250,fat:65,water:8,name:'',targetWeight:'',targetWaist:''};
-}
+function getS(){return DB.get('settings')||{cal:2000,prot:120,carb:250,fat:65,water:8,name:'',targetWeight:'',targetWaist:''};}
 function saveSettings(){
   const s={
     cal:+document.getElementById('goal-cal').value||2000,
@@ -604,97 +759,69 @@ function saveSettings(){
     name:document.getElementById('user-name').value||'',
     targetWeight:document.getElementById('target-weight').value||'',
     targetWaist:document.getElementById('target-waist').value||'',
+    apiKey:document.getElementById('api-key').value||'',
   };
-  DB.set('settings',s);
-  renderToday();
-  showToast('Settings saved ✓');
+  DB.set('settings',s);renderToday();showToast('Settings saved ✓');
 }
-
-function getTodayLog(){
-  return DB.get(DB.key(DB.today())) || {foods:[],drinks:[],water:0};
-}
-function saveLog(log){DB.set(DB.key(DB.today()),log);}
-function getMetrics(){return DB.get('metrics') || [];}
+function getLog(){return DB.get(DB.key(DB.today()))||{foods:[],drinks:[],water:0};}
+function saveLog(l){DB.set(DB.key(DB.today()),l);}
+function getMetrics(){return DB.get('metrics')||[];}
 function saveMetrics(m){DB.set('metrics',m);}
 
-// ═══════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════
-function showPage(name, btn){
+// NAV
+function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
-  const fab=document.getElementById('fab-btn');
-  fab.style.display=name==='today'?'flex':'none';
-  if(name==='today') renderToday();
-  if(name==='body') renderBody();
-  if(name==='reports') renderReports('week');
-  if(name==='settings') loadSettingsUI();
+  document.getElementById('fab-btn').style.display=name==='today'?'flex':'none';
+  if(name==='today')renderToday();
+  if(name==='body')renderBody();
+  if(name==='reports')renderReports('week');
+  if(name==='settings')loadSettingsUI();
 }
 
-// ═══════════════════════════════════════════
 // MODAL
-// ═══════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function openAddModal(){openModal('add-modal');setEntryType('food',document.querySelector('#type-selector .drink-chip'));}
+function openAddModal(){openModal('add-modal');setType('food',document.querySelector('#type-sel .chip'));}
+document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
 
-// Close on backdrop click
-document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
-});
-
-// ═══════════════════════════════════════════
-// ENTRY TYPE TOGGLE
-// ═══════════════════════════════════════════
-let currentType='food';
-function setEntryType(type, btn){
-  currentType=type;
-  document.querySelectorAll('#type-selector .drink-chip').forEach(c=>c.classList.remove('selected'));
-  btn.classList.add('selected');
+// ENTRY TYPE
+let curType='food';
+function setType(type,btn){
+  curType=type;
+  document.querySelectorAll('#type-sel .chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on');
   document.getElementById('food-form').style.display=type==='food'?'block':'none';
   document.getElementById('drink-form').style.display=type==='drink'?'block':'none';
   document.getElementById('add-modal-title').textContent=type==='food'?'Add Food':'Add Drink';
 }
-
-let selectedDrinkType='Water';
-function selectDrink(el){
-  document.querySelectorAll('#drink-type-chips .drink-chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedDrinkType=el.dataset.type;
-  // Auto-fill calories for common drinks
+let selDrinkType='Water';
+function selDrink(el){
+  document.querySelectorAll('#drink-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');selDrinkType=el.dataset.type;
   const cals={Water:0,Coffee:5,Tea:2,Juice:110,Soda:140,'Protein Shake':200,Alcohol:150,Other:0};
-  document.getElementById('drink-cal').value=cals[selectedDrinkType]||0;
+  document.getElementById('drink-cal').value=cals[selDrinkType]||0;
 }
 
-// ═══════════════════════════════════════════
 // PHOTO
-// ═══════════════════════════════════════════
 let photoData=null;
 function handlePhoto(input){
-  if(!input.files[0]) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    photoData=e.target.result;
-    const prev=document.getElementById('photo-preview');
-    prev.src=photoData; prev.style.display='block';
-  };
-  reader.readAsDataURL(input.files[0]);
+  if(!input.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{photoData=e.target.result;const p=document.getElementById('photo-prev');p.src=photoData;p.style.display='block';};
+  r.readAsDataURL(input.files[0]);
 }
 
-// ═══════════════════════════════════════════
 // LOG FOOD
-// ═══════════════════════════════════════════
 function logFood(){
   const name=document.getElementById('food-name').value.trim();
-  if(!name){showToast('Please enter a food name');return;}
-  const cal=+document.getElementById('food-cal').value||0;
-  const log=getTodayLog();
+  if(!name){showToast('Enter a food name');return;}
+  const log=getLog();
   log.foods.push({
-    id:Date.now(),
-    mealType:document.getElementById('meal-type').value,
-    name,cal,
+    id:Date.now(),mealType:document.getElementById('meal-type').value,name,
+    cal:+document.getElementById('food-cal').value||0,
     serving:document.getElementById('food-serving').value||'',
     prot:+document.getElementById('food-prot').value||0,
     carb:+document.getElementById('food-carb').value||0,
@@ -702,84 +829,67 @@ function logFood(){
     photo:photoData,
     time:new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}),
   });
-  saveLog(log);
-  closeModal('add-modal');
-  clearFoodForm();
-  renderToday();
-  updateStreak();
-  showToast('Food logged ✓');
+  saveLog(log);closeModal('add-modal');clearFoodForm();renderToday();updateStreak();showToast('Food logged ✓');
 }
-
 function clearFoodForm(){
   ['food-name','food-cal','food-serving','food-prot','food-carb','food-fat'].forEach(id=>{document.getElementById(id).value='';});
-  photoData=null;
-  document.getElementById('photo-preview').style.display='none';
-  document.getElementById('photo-input').value='';
+  photoData=null;document.getElementById('photo-prev').style.display='none';document.getElementById('photo-input').value='';
 }
-
 function logDrink(){
   const amount=+document.getElementById('drink-amount').value||0;
   const cal=+document.getElementById('drink-cal').value||0;
-  const log=getTodayLog();
-  log.drinks.push({id:Date.now(),type:selectedDrinkType,amount,cal,time:new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})});
-  if(selectedDrinkType==='Water' && amount>=200) log.water=Math.min((log.water||0)+1, getSettings().water*2);
-  saveLog(log);
-  closeModal('add-modal');
-  renderToday();
-  showToast('Drink logged ✓');
+  const log=getLog();
+  log.drinks.push({id:Date.now(),type:selDrinkType,amount,cal,time:new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})});
+  if(selDrinkType==='Water'&&amount>=200)log.water=Math.min((log.water||0)+1,getS().water*2);
+  saveLog(log);closeModal('add-modal');renderToday();showToast('Drink logged ✓');
 }
 
-// ═══════════════════════════════════════════
-// WATER GLASSES
-// ═══════════════════════════════════════════
-function toggleWater(idx){
-  const log=getTodayLog();
-  const s=getSettings();
-  log.water=log.water===idx+1? idx: idx+1;
-  saveLog(log);
-  renderWater(log,s);
+// WATER
+function toggleWater(i){
+  const log=getLog();log.water=log.water===i+1?i:i+1;saveLog(log);renderWater(log,getS());
 }
-
 function renderWater(log,s){
-  const t=document.getElementById('water-tracker');
-  const goal=s.water||8;
+  const t=document.getElementById('water-tracker'),goal=s.water||8;
   t.innerHTML='';
   for(let i=0;i<goal;i++){
     const g=document.createElement('div');
-    g.className='water-glass'+(i<(log.water||0)?' filled':'');
-    g.textContent='💧';
-    g.onclick=()=>toggleWater(i);
-    t.appendChild(g);
+    g.className='wg'+(i<(log.water||0)?' on':'');
+    g.textContent='💧';g.onclick=()=>toggleWater(i);t.appendChild(g);
   }
   document.getElementById('water-total').textContent=`${log.water||0} / ${goal} glasses`;
 }
 
-// ═══════════════════════════════════════════
 // RENDER TODAY
-// ═══════════════════════════════════════════
 const MEAL_ORDER=['Breakfast','Lunch','Dinner','Snack'];
-const MEAL_EMOJI={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍎'};
-const DRINK_EMOJI={Water:'💧',Coffee:'☕',Tea:'🍵',Juice:'🍊',Soda:'🥤','Protein Shake':'💪',Alcohol:'🍺',Other:'🫙'};
+const M_ICON={Breakfast:'🌅',Lunch:'☀️',Dinner:'🌙',Snack:'🍎'};
+const D_ICON={Water:'💧',Coffee:'☕',Tea:'🍵',Juice:'🍊',Soda:'🥤','Protein Shake':'💪',Alcohol:'🍺',Other:'🫙'};
+
+function setGreeting(){
+  const h=new Date().getHours();
+  const s=DB.get('settings');
+  const name=s&&s.name?`, ${s.name.split(' ')[0]}`:'';
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting-text').textContent=g+name;
+}
 
 function renderToday(){
-  const log=getTodayLog();
-  const s=getSettings();
+  setGreeting();
+  const log=getLog(),s=getS();
   const today=new Date();
   document.getElementById('today-date-label').textContent=today.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric'});
-
-  // Totals
   const totCal=log.foods.reduce((a,f)=>a+f.cal,0)+log.drinks.reduce((a,d)=>a+d.cal,0);
   const totProt=log.foods.reduce((a,f)=>a+f.prot,0);
   const totCarb=log.foods.reduce((a,f)=>a+f.carb,0);
   const totFat=log.foods.reduce((a,f)=>a+f.fat,0);
 
-  // Ring
-  const pct=Math.min(totCal/s.cal,1);
-  const circ=427;
-  document.getElementById('cal-ring').style.strokeDashoffset=circ-(circ*pct);
-  document.getElementById('cal-ring').style.stroke=totCal>s.cal?'var(--red)':'var(--green)';
+  // Ring — circumference = 2*π*78 ≈ 490
+  const circ=490,pct=Math.min(totCal/s.cal,1);
+  const ring=document.getElementById('cal-ring');
+  ring.style.strokeDashoffset=circ-(circ*pct);
+  ring.style.stroke=totCal>s.cal?'#F87171':'#4ADE80';
   document.getElementById('ring-cal-num').textContent=totCal;
-  document.getElementById('ring-goal-text').textContent=`of ${s.cal} kcal`;
+  const rem=s.cal-totCal;
+  document.getElementById('ring-remaining').textContent=rem>0?`${rem} kcal remaining`:(rem<0?`${Math.abs(rem)} kcal over`:'Goal reached 🎉');
 
   // Macros
   document.getElementById('prot-val').textContent=totProt+'g';
@@ -789,326 +899,236 @@ function renderToday(){
   document.getElementById('carb-bar').style.width=Math.min(totCarb/s.carb*100,100)+'%';
   document.getElementById('fat-bar').style.width=Math.min(totFat/s.fat*100,100)+'%';
 
-  // Water
   renderWater(log,s);
 
   // Meals
-  const container=document.getElementById('meals-container');
-  const grouped={};
-  log.foods.forEach(f=>{(grouped[f.mealType]=grouped[f.mealType]||[]).push(f);});
-  // Also include drinks as a "Beverages" group
-  if(log.drinks.length) grouped['Beverages']=log.drinks.map(d=>({...d,name:d.type,isDrink:true}));
-
+  const cont=document.getElementById('meals-container');
+  const grp={};
+  log.foods.forEach(f=>{(grp[f.mealType]=grp[f.mealType]||[]).push(f);});
+  if(log.drinks.length)grp['Beverages']=log.drinks.map(d=>({...d,name:d.type,isDrink:true}));
   const order=[...MEAL_ORDER,'Beverages'];
   let html='';
   order.forEach(mt=>{
-    if(!grouped[mt]) return;
-    const items=grouped[mt];
-    const mealCal=items.reduce((a,i)=>a+i.cal,0);
+    if(!grp[mt])return;
+    const items=grp[mt];
+    const mCal=items.reduce((a,i)=>a+i.cal,0);
     html+=`<div class="card meal-section">
-      <div class="meal-type-header">
-        <div class="meal-type-name">${MEAL_EMOJI[mt]||'🥤'} ${mt}</div>
-        <div class="meal-cal-count">${mealCal} kcal</div>
+      <div class="meal-head">
+        <div class="meal-head-left">
+          <div class="meal-icon">${M_ICON[mt]||'🥤'}</div>
+          <div class="meal-type-name">${mt}</div>
+        </div>
+        <div class="meal-cal-badge">${mCal} kcal</div>
       </div>`;
     items.forEach(item=>{
-      const emoji=item.isDrink?(DRINK_EMOJI[item.type]||'🥤'):'🍽';
-      const detail=item.isDrink?`${item.amount||0}ml • ${item.cal} kcal`:`${item.serving||''} • ${item.prot||0}g P • ${item.carb||0}g C • ${item.fat||0}g F`;
+      const em=item.isDrink?(D_ICON[item.type]||'🥤'):'🍽';
+      const det=item.isDrink?`${item.amount||0}ml · ${item.cal} kcal`:`${item.serving?item.serving+' · ':''}${item.prot||0}g P · ${item.carb||0}g C · ${item.fat||0}g F`;
       html+=`<div class="meal-item">
-        <div class="meal-thumb">${item.photo?`<img src="${item.photo}" style="width:100%;height:100%;border-radius:8px;object-fit:cover">`:emoji}</div>
+        <div class="meal-thumb">${item.photo?`<img src="${item.photo}">`:em}</div>
         <div class="meal-info">
           <div class="meal-name">${item.name}</div>
-          <div class="meal-detail">${detail}</div>
+          <div class="meal-detail">${det}</div>
         </div>
         <div class="meal-cal">${item.cal}</div>
-        <button class="delete-btn" onclick="deleteEntry('${item.isDrink?'drink':'food'}',${item.id})">✕</button>
+        <button class="del-btn" onclick="delEntry('${item.isDrink?'drink':'food'}',${item.id})">✕</button>
       </div>`;
     });
-    if(!grouped[mt]?.some(i=>i.isDrink)){
-      html+=`<button class="add-meal-btn" onclick="openAddToMeal('${mt}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add to ${mt}
+    if(!grp[mt]?.some(i=>i.isDrink)){
+      html+=`<button class="add-row-btn" onclick="openAddToMeal('${mt}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add to ${mt}
       </button>`;
     }
     html+='</div>';
   });
-  if(!html){
-    html=`<div class="card"><div class="empty"><div class="empty-icon">🍽</div><div class="empty-text">No meals logged yet.<br>Tap + to add your first meal.</div></div></div>`;
-  }
-  container.innerHTML=html;
+  if(!html)html=`<div class="card"><div class="empty"><div class="empty-icon">🍽</div><div class="empty-text">No meals logged yet.<br>Tap <strong>+</strong> to add your first meal.</div></div></div>`;
+  cont.innerHTML=html;
 
-  // AI card
+  // AI
   if(log.foods.length>0){
     document.getElementById('ai-card').style.display='block';
     if(!log.aiAnalysis){
-      document.getElementById('ai-content').innerHTML=`<button class="btn-primary" style="margin:0" onclick="runAIAnalysis()">✦ Analyze My Nutrition</button>`;
-    } else {
-      renderAIResult(log.aiAnalysis);
-    }
-  } else {
-    document.getElementById('ai-card').style.display='none';
-  }
+      document.getElementById('ai-content').innerHTML=`<button class="btn-p" style="margin:0" onclick="runAI()">✦ Analyse My Nutrition Today</button>`;
+    }else{renderAIResult(log.aiAnalysis);}
+  }else{document.getElementById('ai-card').style.display='none';}
 }
 
-function openAddToMeal(mealType){
-  document.getElementById('meal-type').value=mealType;
-  openModal('add-modal');
-  setEntryType('food',document.querySelector('#type-selector .drink-chip'));
-}
-
-function deleteEntry(type,id){
-  const log=getTodayLog();
-  if(type==='food') log.foods=log.foods.filter(f=>f.id!==id);
+function openAddToMeal(mt){document.getElementById('meal-type').value=mt;openModal('add-modal');setType('food',document.querySelector('#type-sel .chip'));}
+function delEntry(type,id){
+  const log=getLog();
+  if(type==='food')log.foods=log.foods.filter(f=>f.id!==id);
   else log.drinks=log.drinks.filter(d=>d.id!==id);
-  delete log.aiAnalysis;
-  saveLog(log);
-  renderToday();
+  delete log.aiAnalysis;saveLog(log);renderToday();
 }
 
-// ═══════════════════════════════════════════
 // AI ANALYSIS
-// ═══════════════════════════════════════════
-async function runAIAnalysis(){
-  const log=getTodayLog();
-  const s=getSettings();
+async function runAI(){
+  const log=getLog(),s=getS();
   const totCal=log.foods.reduce((a,f)=>a+f.cal,0)+log.drinks.reduce((a,d)=>a+d.cal,0);
   const totProt=log.foods.reduce((a,f)=>a+f.prot,0);
   const totCarb=log.foods.reduce((a,f)=>a+f.carb,0);
   const totFat=log.foods.reduce((a,f)=>a+f.fat,0);
-
-  document.getElementById('ai-content').innerHTML=`<div class="ai-loading"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analyzing your nutrition…</span></div>`;
-
-  const prompt=`You are a friendly nutritionist. Analyze this person's daily food log and give concise, actionable insights.
-
+  document.getElementById('ai-content').innerHTML=`<div class="ai-loading"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analysing your nutrition…</span></div>`;
+  const prompt=`You are a friendly nutritionist. Analyse this person's daily food log and give concise, actionable insights.
 Daily Goals: ${s.cal} kcal, ${s.prot}g protein, ${s.carb}g carbs, ${s.fat}g fat
 Consumed: ${totCal} kcal, ${totProt}g protein, ${totCarb}g carbs, ${totFat}g fat
 Foods eaten: ${log.foods.map(f=>f.name).join(', ')}
-Drinks: ${log.drinks.map(d=>d.type+' '+d.amount+'ml').join(', ') || 'None'}
-
-Respond with ONLY a JSON object (no markdown, no backticks) with this structure:
-{
-  "status": "on_track" | "under" | "over",
-  "summary": "One sentence overall summary",
-  "insights": [
-    {"icon": "✅", "text": "positive insight"},
-    {"icon": "⚠️", "text": "warning or suggestion"},
-    {"icon": "💡", "text": "actionable tip"}
-  ],
-  "remaining": "What to eat for remaining calories if applicable"
-}`;
-
+Drinks: ${log.drinks.map(d=>d.type+' '+d.amount+'ml').join(', ')||'None'}
+Respond ONLY with a JSON object (no markdown, no backticks):
+{"status":"on_track"|"under"|"over","summary":"One sentence overall summary","insights":[{"icon":"✅","text":"positive insight"},{"icon":"⚠️","text":"warning or suggestion"},{"icon":"💡","text":"actionable tip"}],"remaining":"What to eat for remaining calories if applicable"}`;
+  const apiKey=getS().apiKey||'';
+  if(!apiKey){
+    document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.05)">
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">⚠️ API Key Required</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">Add your Anthropic API key in <b style="color:var(--text)">Settings → AI Features</b> to enable nutrition analysis.<br><br>Get a free key at <span style="color:var(--blue)">console.anthropic.com</span></div>
+      <button class="btn-p" style="margin:0" onclick="showPage('settings',document.getElementById('nav-settings'));closeModal('add-modal')">Open Settings →</button>
+    </div>`;
+    return;
+  }
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}]
-      })
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'API error '+res.status);}
     const data=await res.json();
-    const text=data.content?.[0]?.text||'{}';
-    const clean=text.replace(/```json|```/g,'').trim();
-    const result=JSON.parse(clean);
-    log.aiAnalysis=result;
-    saveLog(log);
-    renderAIResult(result);
+    const result=JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+    log.aiAnalysis=result;saveLog(log);renderAIResult(result);
   }catch(e){
-    document.getElementById('ai-content').innerHTML=`<div style="color:var(--text2);font-size:13px">Could not analyze — check connection and try again.</div>`;
+    document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(248,113,113,.2);background:rgba(248,113,113,.05)">
+      <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">Error</div>
+      <div style="font-size:12px;color:var(--text2)">${e.message||'Unknown error. Check your API key in Settings.'}</div>
+    </div>`;
   }
 }
-
 function renderAIResult(r){
-  let html=`<div class="ai-result">
-    <div style="font-weight:600;font-size:14px;margin-bottom:10px">${r.summary||''}</div>
-    <div class="ai-insights">`;
-  (r.insights||[]).forEach(i=>{
-    html+=`<div class="ai-insight-item"><div class="ai-icon">${i.icon}</div><div>${i.text}</div></div>`;
-  });
-  if(r.remaining){
-    html+=`<div style="margin-top:8px;font-size:12px;color:var(--text2)">📌 ${r.remaining}</div>`;
-  }
-  html+=`</div></div>
-  <button class="btn-secondary" style="margin-top:8px;font-size:13px" onclick="runAIAnalysis()">↻ Re-analyze</button>`;
+  let html=`<div class="ai-result"><div style="font-weight:700;font-size:14px;margin-bottom:10px;letter-spacing:-.1px">${r.summary||''}</div>`;
+  (r.insights||[]).forEach(i=>{html+=`<div class="ai-insight-item"><div class="ai-icon">${i.icon}</div><div>${i.text}</div></div>`;});
+  if(r.remaining)html+=`<div style="margin-top:8px;font-size:12px;color:var(--text2)">📌 ${r.remaining}</div>`;
+  html+=`</div><button class="btn-s" style="margin-top:8px;font-size:13px" onclick="runAI()">↻ Re-analyse</button>`;
   document.getElementById('ai-content').innerHTML=html;
 }
 
-// ═══════════════════════════════════════════
 // BODY METRICS
-// ═══════════════════════════════════════════
 function logMetric(){
-  const w=document.getElementById('m-weight').value;
-  const wa=document.getElementById('m-waist').value;
-  if(!w && !wa){showToast('Enter at least one value');return;}
-  const metrics=getMetrics();
-  metrics.push({date:DB.today(),weight:w?+w:null,waist:wa?+wa:null,notes:document.getElementById('m-notes').value});
-  saveMetrics(metrics);
-  closeModal('metric-modal');
-  document.getElementById('m-weight').value='';
-  document.getElementById('m-waist').value='';
-  document.getElementById('m-notes').value='';
-  renderBody();
-  showToast('Metrics saved ✓');
+  const w=document.getElementById('m-weight').value,wa=document.getElementById('m-waist').value;
+  if(!w&&!wa){showToast('Enter at least one value');return;}
+  const m=getMetrics();
+  m.push({date:DB.today(),weight:w?+w:null,waist:wa?+wa:null,notes:document.getElementById('m-notes').value});
+  saveMetrics(m);closeModal('metric-modal');
+  document.getElementById('m-weight').value='';document.getElementById('m-waist').value='';document.getElementById('m-notes').value='';
+  renderBody();showToast('Measurements saved ✓');
 }
-
 function renderBody(){
   const metrics=getMetrics().sort((a,b)=>a.date.localeCompare(b.date));
-  const weights=metrics.filter(m=>m.weight);
-  const waists=metrics.filter(m=>m.waist);
-  const last=weights[weights.length-1];
-  const prev=weights[weights.length-2];
-  const lastW=waists[waists.length-1];
-  const prevW=waists[waists.length-2];
-
+  const weights=metrics.filter(m=>m.weight),waists=metrics.filter(m=>m.waist);
+  const last=weights[weights.length-1],prev=weights[weights.length-2];
+  const lastW=waists[waists.length-1],prevW=waists[waists.length-2];
   document.getElementById('curr-weight').textContent=last?last.weight:'--';
   document.getElementById('curr-waist').textContent=lastW?lastW.waist:'--';
-
-  if(last && prev){
+  if(last&&prev){
     const diff=(last.weight-prev.weight).toFixed(1);
     const el=document.getElementById('weight-change');
-    el.textContent=(diff>0?'▲ +':'▼ ')+diff+'kg vs last';
+    el.textContent=(diff>0?'▲ +':'▼ ')+diff+' kg vs last';
     el.className='stat-change '+(diff>0?'neg':'pos');
   }
-  if(lastW && prevW){
+  if(lastW&&prevW){
     const diff=(lastW.waist-prevW.waist).toFixed(1);
     const el=document.getElementById('waist-change');
-    el.textContent=(diff>0?'▲ +':'▼ ')+diff+'cm vs last';
+    el.textContent=(diff>0?'▲ +':'▼ ')+diff+' cm vs last';
     el.className='stat-change '+(diff>0?'neg':'pos');
   }
-
-  // Chart
-  drawWeightChart(weights);
-
-  // Log
-  const log=document.getElementById('metrics-log');
-  if(!metrics.length){
-    log.innerHTML=`<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">No measurements yet.<br>Tap the button below to start!</div></div>`;
-    return;
-  }
-  log.innerHTML=[...metrics].reverse().slice(0,20).map(m=>`
-    <div class="metric-log-row">
-      <div class="metric-date">${formatDate(m.date)}</div>
+  drawChart(weights);
+  const logEl=document.getElementById('metrics-log');
+  if(!metrics.length){logEl.innerHTML=`<div class="empty"><div class="empty-icon">📏</div><div class="empty-text">No measurements yet.<br>Tap the button below to start!</div></div>`;return;}
+  logEl.innerHTML=[...metrics].reverse().slice(0,20).map(m=>`
+    <div class="metric-row">
+      <div class="metric-date">${fmtDate(m.date)}</div>
       <div class="metric-val-group">
         ${m.weight?`<div class="metric-item"><div class="metric-num">${m.weight}</div><div class="metric-unit-sm">kg</div></div>`:''}
         ${m.waist?`<div class="metric-item"><div class="metric-num">${m.waist}</div><div class="metric-unit-sm">cm</div></div>`:''}
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-function drawWeightChart(weights){
+function drawChart(weights){
   const canvas=document.getElementById('weight-chart');
   const ctx=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth*window.devicePixelRatio||600;
-  canvas.height=canvas.offsetHeight*window.devicePixelRatio||280;
-  ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
-  const w=canvas.offsetWidth, h=canvas.offsetHeight;
-  ctx.clearRect(0,0,w,h);
-  if(weights.length<2){
-    ctx.fillStyle='#8b949e';ctx.font='13px DM Sans';ctx.textAlign='center';
-    ctx.fillText('Log 2+ weights to see chart',w/2,h/2);return;
-  }
-  const vals=weights.map(x=>x.weight);
-  const min=Math.min(...vals)-1, max=Math.max(...vals)+1;
-  const px=(i)=>(i/(weights.length-1))*(w-40)+20;
-  const py=(v)=>h-((v-min)/(max-min))*(h-30)-10;
-
-  // Grid
-  ctx.strokeStyle='#21262d';ctx.lineWidth=1;
-  for(let i=0;i<4;i++){
-    const y=10+(h-40)*i/3;
-    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
-  }
-
-  // Line
-  ctx.beginPath();ctx.strokeStyle='#00e5a0';ctx.lineWidth=2;ctx.lineJoin='round';
-  weights.forEach((pt,i)=>{i===0?ctx.moveTo(px(i),py(pt.weight)):ctx.lineTo(px(i),py(pt.weight));});
-  ctx.stroke();
-
-  // Area
-  const grad=ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0,'rgba(0,229,160,.2)');grad.addColorStop(1,'rgba(0,229,160,0)');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=(canvas.offsetWidth||300)*dpr;
+  canvas.height=(canvas.offsetHeight||130)*dpr;
+  ctx.scale(dpr,dpr);
+  const W=canvas.offsetWidth||300,H=canvas.offsetHeight||130;
+  ctx.clearRect(0,0,W,H);
+  if(weights.length<2){ctx.fillStyle='#4A4A60';ctx.font='13px Plus Jakarta Sans';ctx.textAlign='center';ctx.fillText('Log 2+ weights to see trend',W/2,H/2);return;}
+  const vals=weights.map(x=>x.weight),min=Math.min(...vals)-1,max=Math.max(...vals)+1;
+  const px=i=>(i/(weights.length-1))*(W-32)+16;
+  const py=v=>H-4-((v-min)/(max-min))*(H-20);
+  ctx.strokeStyle='#1C1C28';ctx.lineWidth=1;
+  for(let i=0;i<4;i++){const y=4+(H-20)*i/3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Area fill
   ctx.beginPath();
   weights.forEach((pt,i)=>{i===0?ctx.moveTo(px(i),py(pt.weight)):ctx.lineTo(px(i),py(pt.weight));});
-  ctx.lineTo(px(weights.length-1),h);ctx.lineTo(px(0),h);ctx.closePath();
+  ctx.lineTo(px(weights.length-1),H);ctx.lineTo(px(0),H);ctx.closePath();
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(74,222,128,.18)');grad.addColorStop(1,'rgba(74,222,128,0)');
   ctx.fillStyle=grad;ctx.fill();
-
+  // Line
+  ctx.beginPath();ctx.strokeStyle='#4ADE80';ctx.lineWidth=2;ctx.lineJoin='round';
+  weights.forEach((pt,i)=>{i===0?ctx.moveTo(px(i),py(pt.weight)):ctx.lineTo(px(i),py(pt.weight));});
+  ctx.stroke();
   // Dots
   weights.forEach((pt,i)=>{
-    ctx.beginPath();ctx.arc(px(i),py(pt.weight),4,0,Math.PI*2);
-    ctx.fillStyle='#00e5a0';ctx.fill();
-    ctx.fillStyle='#0d1117';ctx.beginPath();ctx.arc(px(i),py(pt.weight),2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(px(i),py(pt.weight),4,0,Math.PI*2);ctx.fillStyle='#4ADE80';ctx.fill();
+    ctx.beginPath();ctx.arc(px(i),py(pt.weight),2,0,Math.PI*2);ctx.fillStyle='#0A0A0F';ctx.fill();
   });
 }
 
-// ═══════════════════════════════════════════
 // REPORTS
-// ═══════════════════════════════════════════
-let currentPeriod='week';
+let curPeriod='week';
 function setReportPeriod(p,btn){
-  currentPeriod=p;
-  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderReports(p);
+  curPeriod=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderReports(p);
 }
-
-function getDateRange(period){
-  const today=new Date();
-  const end=today.toISOString().split('T')[0];
+function getRange(p){
+  const today=new Date(),end=today.toISOString().split('T')[0];
   const start=new Date(today);
-  if(period==='week') start.setDate(today.getDate()-6);
-  else start.setDate(today.getDate()-29);
-  return {start:start.toISOString().split('T')[0],end};
+  p==='week'?start.setDate(today.getDate()-6):start.setDate(today.getDate()-29);
+  return{start:start.toISOString().split('T')[0],end};
 }
-
-function renderReports(period){
-  const {start,end}=getDateRange(period);
-  const days=[];
-  const cur=new Date(start);
-  const endD=new Date(end);
+function renderReports(p){
+  const{start,end}=getRange(p),days=[],s=getS();
+  const cur=new Date(start),endD=new Date(end);
   while(cur<=endD){
     const d=cur.toISOString().split('T')[0];
     const log=DB.get(DB.key(d))||{foods:[],drinks:[],water:0};
     const totCal=log.foods.reduce((a,f)=>a+f.cal,0)+log.drinks.reduce((a,d)=>a+d.cal,0);
-    const totProt=log.foods.reduce((a,f)=>a+f.prot,0);
-    days.push({date:d,cal:totCal,prot:totProt,foods:log.foods.length+log.drinks.length,water:log.water||0});
+    days.push({date:d,cal:totCal,prot:log.foods.reduce((a,f)=>a+f.prot,0),foods:log.foods.length+log.drinks.length,water:log.water||0});
     cur.setDate(cur.getDate()+1);
   }
-
-  const s=getSettings();
   const logged=days.filter(d=>d.foods>0);
   const avgCal=logged.length?Math.round(logged.reduce((a,d)=>a+d.cal,0)/logged.length):0;
   const avgProt=logged.length?Math.round(logged.reduce((a,d)=>a+d.prot,0)/logged.length):0;
-  const onTrack=logged.filter(d=>d.cal>=s.cal*0.8&&d.cal<=s.cal*1.1).length;
-
+  const onTrack=logged.filter(d=>d.cal>=s.cal*.8&&d.cal<=s.cal*1.1).length;
   document.getElementById('report-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-val">${avgCal}<span class="stat-unit">kcal</span></div><div class="stat-label">Avg Daily Cal</div></div>
-    <div class="stat-card"><div class="stat-val">${avgProt}<span class="stat-unit">g</span></div><div class="stat-label">Avg Protein</div></div>
+    <div class="stat-card"><div class="stat-val">${avgCal}<span class="stat-unit"> kcal</span></div><div class="stat-label">Avg Daily Cal</div></div>
+    <div class="stat-card"><div class="stat-val">${avgProt}<span class="stat-unit"> g</span></div><div class="stat-label">Avg Protein</div></div>
     <div class="stat-card"><div class="stat-val">${logged.length}<span class="stat-unit">/${days.length}</span></div><div class="stat-label">Days Logged</div></div>
-    <div class="stat-card"><div class="stat-val">${onTrack}</div><div class="stat-label">Days On Target</div></div>
-  `;
-
-  const tbody=document.getElementById('report-tbody');
-  tbody.innerHTML=days.map(d=>{
-    const status=d.foods===0?'':(d.cal<s.cal*0.7?'under':d.cal>s.cal*1.15?'over':'on track');
+    <div class="stat-card"><div class="stat-val">${onTrack}</div><div class="stat-label">Days on Target</div></div>`;
+  document.getElementById('report-tbody').innerHTML=days.map(d=>{
+    const status=d.foods===0?'':(d.cal<s.cal*.7?'under':d.cal>s.cal*1.15?'over':'on track');
     const tag=status==='on track'?'tag-good':status==='over'?'tag-bad':status==='under'?'tag-warn':'';
-    return `<tr>
-      <td>${formatDate(d.date,true)}</td>
-      <td>${d.cal||'—'}</td>
-      <td>${d.prot||'—'}g</td>
-      <td>${status?`<span class="tag ${tag}">${status}</span>`:'—'}</td>
-    </tr>`;
+    return`<tr><td>${fmtDate(d.date,true)}</td><td>${d.cal||'—'}</td><td>${d.prot||'—'}g</td><td>${status?`<span class="tag ${tag}">${status}</span>`:'—'}</td></tr>`;
   }).join('');
 }
-
 async function generateAIReport(){
-  const {start,end}=getDateRange(currentPeriod);
-  const s=getSettings();
+  const{start,end}=getRange(curPeriod),s=getS();
   document.getElementById('report-ai-content').innerHTML=`<div class="ai-loading"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Generating report…</span></div>`;
-
-  const days=[];
-  const cur=new Date(start);
-  const endD=new Date(end);
+  const days=[];const cur=new Date(start),endD=new Date(end);
   while(cur<=endD){
     const d=cur.toISOString().split('T')[0];
     const log=DB.get(DB.key(d))||{foods:[],drinks:[],water:0};
@@ -1118,118 +1138,75 @@ async function generateAIReport(){
     }
     cur.setDate(cur.getDate()+1);
   }
-
   if(!days.length){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--text2);font-size:13px">No data logged in this period yet.</div>`;return;}
-
-  const prompt=`You are a professional nutritionist giving a ${currentPeriod}ly summary report.
-
-User goals: ${s.cal} kcal/day, ${s.prot}g protein/day
-Period: ${start} to ${end}
-
-Data: ${JSON.stringify(days)}
-
-Write a 3-4 sentence professional nutritionist report covering: overall calorie adherence, protein intake, patterns noticed, and 2 specific actionable recommendations for next ${currentPeriod}. Keep it encouraging but honest. Plain text only, no markdown.`;
-
+  const prompt=`You are a professional nutritionist giving a ${curPeriod}ly summary report.\nUser goals: ${s.cal} kcal/day, ${s.prot}g protein/day\nPeriod: ${start} to ${end}\nData: ${JSON.stringify(days)}\nWrite a 3-4 sentence professional nutritionist report covering: calorie adherence, protein intake, patterns noticed, and 2 actionable recommendations. Keep it encouraging. Plain text only.`;
+  const apiKey=getS().apiKey||'';
+  if(!apiKey){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--amber);font-size:13px;font-weight:600">⚠️ Add your API key in Settings → AI Features to use this feature.</div>`;return;}
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'API error '+res.status);}
     const data=await res.json();
-    const text=data.content?.[0]?.text||'';
-    document.getElementById('report-ai-content').innerHTML=`<div class="ai-result"><div class="ai-insights">${text}</div></div>`;
-  }catch(e){
-    document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--text2);font-size:13px">Could not generate report.</div>`;
-  }
+    document.getElementById('report-ai-content').innerHTML=`<div class="ai-result"><div class="ai-insights" style="font-size:13px;line-height:1.7">${data.content?.[0]?.text||''}</div></div>`;
+  }catch(e){document.getElementById('report-ai-content').innerHTML=`<div style="color:var(--red);font-size:13px">${e.message||'Could not generate report.'}</div>`;}
 }
-
 function exportCSV(){
-  const {start,end}=getDateRange(currentPeriod);
-  let csv='Date,Calories,Protein(g),Carbs(g),Fat(g),Water(glasses)\n';
-  const cur=new Date(start);
-  const endD=new Date(end);
+  const{start,end}=getRange(curPeriod);let csv='Date,Calories,Protein(g),Carbs(g),Fat(g),Water(glasses)\n';
+  const cur=new Date(start),endD=new Date(end);
   while(cur<=endD){
     const d=cur.toISOString().split('T')[0];
     const log=DB.get(DB.key(d))||{foods:[],drinks:[],water:0};
-    const cal=log.foods.reduce((a,f)=>a+f.cal,0)+log.drinks.reduce((a,d)=>a+d.cal,0);
-    const prot=log.foods.reduce((a,f)=>a+f.prot,0);
-    const carb=log.foods.reduce((a,f)=>a+f.carb,0);
-    const fat=log.foods.reduce((a,f)=>a+f.fat,0);
-    csv+=`${d},${cal},${prot},${carb},${fat},${log.water||0}\n`;
+    csv+=`${d},${log.foods.reduce((a,f)=>a+f.cal,0)+log.drinks.reduce((a,d)=>a+d.cal,0)},${log.foods.reduce((a,f)=>a+f.prot,0)},${log.foods.reduce((a,f)=>a+f.carb,0)},${log.foods.reduce((a,f)=>a+f.fat,0)},${log.water||0}\n`;
     cur.setDate(cur.getDate()+1);
   }
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`nutrition-${currentPeriod}-${DB.today()}.csv`;a.click();
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`nutrition-${curPeriod}-${DB.today()}.csv`;a.click();
   showToast('CSV exported ✓');
 }
 
-// ═══════════════════════════════════════════
-// SETTINGS UI
-// ═══════════════════════════════════════════
+// SETTINGS
 function loadSettingsUI(){
-  const s=getSettings();
-  document.getElementById('goal-cal').value=s.cal;
-  document.getElementById('goal-prot').value=s.prot;
-  document.getElementById('goal-carb').value=s.carb;
-  document.getElementById('goal-fat').value=s.fat;
-  document.getElementById('goal-water').value=s.water;
-  document.getElementById('user-name').value=s.name||'';
-  document.getElementById('target-weight').value=s.targetWeight||'';
-  document.getElementById('target-waist').value=s.targetWaist||'';
+  const s=getS();
+  document.getElementById('goal-cal').value=s.cal;document.getElementById('goal-prot').value=s.prot;
+  document.getElementById('goal-carb').value=s.carb;document.getElementById('goal-fat').value=s.fat;
+  document.getElementById('goal-water').value=s.water;document.getElementById('user-name').value=s.name||'';
+  document.getElementById('target-weight').value=s.targetWeight||'';document.getElementById('target-waist').value=s.targetWaist||'';
+  document.getElementById('api-key').value=s.apiKey||'';
 }
+function clearAllData(){if(confirm('Delete all data permanently?')){localStorage.clear();renderToday();showToast('All data cleared');}}
 
-function clearAllData(){
-  if(confirm('Are you sure? This will delete all your logs and metrics permanently.')){
-    localStorage.clear();
-    renderToday();
-    showToast('All data cleared');
-  }
-}
-
-// ═══════════════════════════════════════════
 // STREAK
-// ═══════════════════════════════════════════
 function updateStreak(){
   let streak=0,d=new Date();
   while(true){
-    const key=DB.key(d.toISOString().split('T')[0]);
-    const log=DB.get(key);
-    if(log&&(log.foods.length||log.drinks.length)) streak++;
-    else break;
+    const log=DB.get(DB.key(d.toISOString().split('T')[0]));
+    if(log&&(log.foods.length||log.drinks.length))streak++;else break;
     d.setDate(d.getDate()-1);
   }
-  DB.set('streak',streak);
-  document.getElementById('streak-count').textContent=streak;
+  DB.set('streak',streak);document.getElementById('streak-count').textContent=streak;
 }
 
-// ═══════════════════════════════════════════
 // UTILS
-// ═══════════════════════════════════════════
-function formatDate(d,short=false){
+function fmtDate(d,short=false){
   const date=new Date(d+'T00:00:00');
-  if(short) return date.toLocaleDateString('en',{month:'short',day:'numeric'});
+  if(short)return date.toLocaleDateString('en',{month:'short',day:'numeric'});
   return date.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'});
 }
-
 function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ═══════════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-loadSettingsUI();
-renderToday();
-updateStreak();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+loadSettingsUI();renderToday();updateStreak();
 document.getElementById('streak-count').textContent=DB.get('streak')||0;
 </script>
 </body>
