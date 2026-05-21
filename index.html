@@ -628,6 +628,14 @@ select.fi option{background:var(--bg2)}
     </div>
   </div>
 
+  <div class="card" id="api-log-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="card-label" style="margin:0">API Call Log</div>
+      <button onclick="clearApiLog()" style="font-size:11px;font-weight:600;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-family:var(--font)">Clear</button>
+    </div>
+    <div id="api-log-list"></div>
+  </div>
+
   <div class="settings-section-title">App Info</div>
   <div class="card">
     <div style="color:var(--text2);font-size:13px;line-height:1.8">
@@ -829,7 +837,117 @@ function handlePhoto(input){
   r.readAsDataURL(input.files[0]);
 }
 
+// RATE LIMIT COUNTDOWN — shows a live timer and retry button
+function showRateLimitCountdown(targetId, retryFn, seconds=60){
+  let remaining=seconds;
+  const el=document.getElementById(targetId);
+  if(!el) return;
+
+  function render(){
+    const mins=Math.floor(remaining/60);
+    const secs=remaining%60;
+    const timeStr=mins>0?`${mins}m ${secs}s`:`${secs}s`;
+    const pct=((seconds-remaining)/seconds)*100;
+    // colour shifts from amber → green as timer counts down
+    const colour=remaining>30?'var(--amber)':remaining>10?'#A3E635':'var(--accent)';
+    el.innerHTML=`
+      <div class="ai-result" style="border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.04)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:22px">⏳</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--amber)">Rate Limit Reached</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:1px">Free tier: 15 requests / minute</div>
+          </div>
+        </div>
+        <!-- Progress bar -->
+        <div style="height:4px;background:var(--bg3);border-radius:2px;margin-bottom:10px;overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:${colour};width:${pct}%;transition:width 1s linear"></div>
+        </div>
+        ${remaining>0
+          ? `<div style="text-align:center;font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:${colour};letter-spacing:-1px;margin-bottom:6px">${timeStr}</div>
+             <div style="font-size:11px;color:var(--text3);text-align:center">Auto-retry when ready</div>`
+          : `<button class="btn-p" style="margin:0" onclick="${retryFn}">↻ Try Again Now</button>`
+        }
+        <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">💡 Tip: Log all meals first, then analyse once — saves your free quota.</div>
+      </div>`;
+  }
+
+  render();
+  const timer=setInterval(()=>{
+    remaining--;
+    render();
+    if(remaining<=0){
+      clearInterval(timer);
+    }
+  },1000);
+}
+
 // GEMINI API CALL — tries models in order until one works
+// ── API CALL LOGGER ─────────────────────────────────────────────────────────
+function logApiCall(type, model, status, err=''){
+  const logs=DB.get('api_logs')||[];
+  logs.unshift({
+    time:new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+    date:DB.today(),
+    type,model,status,err:err.slice(0,80)
+  });
+  DB.set('api_logs',logs.slice(0,50)); // keep last 50
+}
+function renderApiLog(){
+  const logs=DB.get('api_logs')||[];
+  const el=document.getElementById('api-log-list');
+  if(!el) return;
+  // Count today's calls
+  const today=DB.today();
+  const todayCalls=logs.filter(l=>l.date===today);
+  const successes=todayCalls.filter(l=>l.status==='ok').length;
+  const failures=todayCalls.filter(l=>l.status!=='ok').length;
+
+  if(!logs.length){
+    el.innerHTML=`<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px 0">No API calls yet today</div>`;
+    return;
+  }
+
+  let html=`<div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="flex:1;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.15);border-radius:8px;padding:8px;text-align:center">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--accent)">${successes}</div>
+      <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Success today</div>
+    </div>
+    <div style="flex:1;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15);border-radius:8px;padding:8px;text-align:center">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--red)">${failures}</div>
+      <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Failed today</div>
+    </div>
+    <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:var(--text)">${todayCalls.length}</div>
+      <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Total today</div>
+    </div>
+  </div>`;
+
+  html+=`<div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Recent calls</div>`;
+  logs.slice(0,10).forEach(l=>{
+    const isOk=l.status==='ok';
+    const dot=isOk?'var(--accent)':'var(--red)';
+    const label=isOk?'OK':'FAIL';
+    html+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="width:6px;height:6px;border-radius:50%;background:${dot};margin-top:4px;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:600;color:var(--text)">${l.type}</span>
+          <span style="font-size:10px;color:${dot};font-weight:700;background:${isOk?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};padding:1px 6px;border-radius:4px">${label}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:1px">${l.model} · ${l.date} ${l.time}</div>
+        ${l.err?`<div style="font-size:10px;color:var(--red);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.err}</div>`:''}
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function clearApiLog(){
+  DB.set('api_logs',[]);
+  renderApiLog();
+  showToast('API log cleared');
+}
+
 async function geminiCall(prompt, imageData=null){
   const apiKey=getS().apiKey||'';
   if(!apiKey) throw new Error('no_key');
@@ -837,6 +955,8 @@ async function geminiCall(prompt, imageData=null){
   // Confirmed working models from your API key (v1beta)
   const models=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-2.5-flash'];
   let lastErr='Unknown error';
+  // Determine call type from prompt content
+  const callType=imageData?'AI Fill (photo)':prompt.includes('summary')||prompt.includes('report')?'AI Report':prompt.includes('nutritionist')||prompt.includes('Analyse')?'AI Analyse':'AI Fill';
 
   for(const m of models){
     try{
@@ -857,11 +977,13 @@ async function geminiCall(prompt, imageData=null){
       const data=await res.json();
       if(!res.ok){
         lastErr=data.error?.message||'HTTP '+res.status;
+        logApiCall(callType, m, res.status===429?'rate_limit':'error', lastErr);
         if(res.status===429||res.status===401||res.status===403) throw new Error(lastErr);
         continue;
       }
       const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
       if(!text){lastErr='Empty response';continue;}
+      logApiCall(callType, m, 'ok');
       return text;
     }catch(e){
       if(e.message==='no_key') throw e;
@@ -869,6 +991,7 @@ async function geminiCall(prompt, imageData=null){
       lastErr=e.message||lastErr;
     }
   }
+  logApiCall(callType,'all_failed','error',lastErr);
   throw new Error(lastErr);
 }
 
@@ -1099,12 +1222,15 @@ Respond ONLY with a JSON object (no markdown, no backticks):
     const result=JSON.parse(text);
     log.aiAnalysis=result;saveLog(log);renderAIResult(result);
   }catch(e){
-    const isQuota=e.message&&(e.message.includes('quota')||e.message.includes('Quota')||e.message.includes('limit'));
-    document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.05)">
-      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:6px">${isQuota?'⏳ Rate Limit Reached':'❌ Error'}</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">${isQuota?'Free quota exceeded. Wait about 1 minute and try again — the free tier allows 15 requests/minute.':e.message||'Check your Gemini API key in Settings.'}</div>
-      ${isQuota?'<div style="font-size:11px;color:var(--text3);margin-top:6px">Tip: Log all your meals first, then analyse once at end of day to save quota.</div>':''} 
-    </div>`;
+    const isQuota=e.message&&(e.message.includes('quota')||e.message.includes('Quota')||e.message.includes('limit')||e.message.includes('429'));
+    if(isQuota){
+      showRateLimitCountdown('ai-content','runAI()');
+    } else {
+      document.getElementById('ai-content').innerHTML=`<div class="ai-result" style="border-color:rgba(248,113,113,.2);background:rgba(248,113,113,.05)">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">❌ Error</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">${e.message||'Check your Gemini API key in Settings.'}</div>
+      </div>`;
+    }
   }
 }
 function renderAIResult(r){
@@ -1264,6 +1390,7 @@ function exportCSV(){
 // SETTINGS
 function loadSettingsUI(){
   const s=getS();
+  setTimeout(renderApiLog,0);
   document.getElementById('goal-cal').value=s.cal;document.getElementById('goal-prot').value=s.prot;
   document.getElementById('goal-carb').value=s.carb;document.getElementById('goal-fat').value=s.fat;
   document.getElementById('goal-water').value=s.water;document.getElementById('user-name').value=s.name||'';
